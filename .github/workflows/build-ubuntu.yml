@@ -1,0 +1,149 @@
+# Builds the project in multiple modes and runs all of the existing unit tests.
+
+name: "Build-Run-Ubuntu"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+# Note that the container created by workflows maps part of the local volume to
+# the container. Specifically ~/actions-runner/_work. Successive jobs can reuse
+# the output of their predecessors without having to generate artifacts.
+jobs:
+  build-release-no-tests:
+    runs-on: [self-hosted, linux]
+    container:
+      image: ${{vars.BUILD_IMAGE}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: build-ubuntu-workflow
+          submodules: true
+
+      - name: Build in release
+        run: |
+          cd build-ubuntu-workflow
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=release -DBUILD_TRECS_TESTS=0 ..
+          make -j4
+          cd ..
+
+  run-release-tests:
+    runs-on: [self-hosted, linux]
+    needs: build-release-no-tests
+    container:
+      image: ${{vars.BUILD_IMAGE}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: build-ubuntu-workflow
+          submodules: true
+
+      - name: Build in release
+        run: |
+          cd build-ubuntu-workflow
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=release ..
+          make -j4
+          cd ..
+
+      - name: Run tests
+        run: |
+          cd build-ubuntu-workflow/build
+          ctest -V
+
+  run-release-demos:
+    runs-on: [self-hosted, linux]
+    needs: run-release-tests
+    container:
+      image: ${{vars.BUILD_IMAGE}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: build-ubuntu-workflow
+          submodules: true
+
+      - name: Build in release
+        run: |
+          cd build-ubuntu-workflow
+          mkdir build
+          cd build
+          cmake -DBUILD_TRECS_DEMOS=1 -DCMAKE_BUILD_TYPE=release ..
+          make -j4
+          cd ..
+
+      - name: Run demos
+        run: |
+          cd build-ubuntu-workflow/build
+          ./ecb_system
+          ./multi_component_multi_system
+          ./multi_component_system
+
+  build-debug-no-tests:
+    runs-on: [self-hosted, linux]
+    needs: run-release-demos
+    container:
+      image: ${{vars.BUILD_IMAGE}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: build-ubuntu-workflow
+          submodules: true
+
+      - name: Build in release
+        run: |
+          cd build-ubuntu-workflow
+          mkdir build
+          cd build
+          cmake -DBUILD_TRECS_TESTS=0 ..
+          make -j4
+          cd ..
+
+
+  run-debug-tests:
+    runs-on: [self-hosted, linux]
+    needs: build-debug-no-tests
+    container:
+      image: ${{vars.BUILD_IMAGE}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: build-ubuntu-workflow
+          submodules: true
+
+      - name: Where the hell am I
+        run: |
+          pwd
+          ls -lah
+
+      - name: Build in debug
+        run: |
+          cd build-ubuntu-workflow
+          mkdir build
+          cd build
+          cmake ..
+          make -j4
+          cd ..
+
+      - name: Run tests
+        run: |
+          cd build-ubuntu-workflow/build
+          ctest -V

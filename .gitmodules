@@ -1,0 +1,3 @@
+[submodule "tests/catch2"]
+	path = tests/catch2
+	url = git@github.com:therealjtgill/Catch2_header_only.git

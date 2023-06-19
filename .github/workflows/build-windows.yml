@@ -1,0 +1,156 @@
+# Builds the project in multiple modes and runs all of the existing unit tests.
+
+name: "Build-Run-Windows"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+# Note that the container created by workflows maps part of the local volume to
+# the container. Specifically ~/actions-runner/_work. Successive jobs can reuse
+# the output of their predecessors without having to generate artifacts.
+jobs:
+  build-release-no-tests:
+    runs-on: [self-hosted, linux]
+    container:
+      image: ${{vars.BUILD_IMAGE}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: build-windows-workflow
+          submodules: true
+
+      - name: Build in release
+        run: |
+          cd build-windows-workflow
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=release -DBUILD_TRECS_TESTS=0 ..
+          make -j4
+          cd ..
+
+  run-release-tests:
+    runs-on: [self-hosted, Windows]
+    needs: build-release-no-tests
+    steps:
+      - name: Check git
+        run: git --version
+
+      - name: What's in the path?
+        run: echo $env:PATH
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: build-windows-workflow
+          submodules: true
+
+      - name: Where the hell am I
+        run: |
+          pwd
+          ls
+
+      - name: Build in release
+        run: |
+          cd build-windows-workflow
+          pushd .
+          mkdir build
+          cd build
+          cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=release ..
+          mingw32-make -j4
+          popd
+
+      - name: Run ctest
+        run: |
+          cd build-windows-workflow/build
+          dir
+          ctest -V --output-on-failure
+
+  run-release-demos:
+    runs-on: [self-hosted, Windows]
+    needs: run-release-tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: build-windows-workflow
+          submodules: true
+
+      - name: Build in release
+        run: |
+          cd build-windows-workflow
+          mkdir build
+          cd build
+          cmake -G "MinGW Makefiles" -DBUILD_TRECS_DEMOS=1 -DCMAKE_BUILD_TYPE=release ..
+          mingw32-make -j4
+          cd ..
+
+      - name: Run demos
+        run: |
+          cd build-windows-workflow/build
+          ./ecb_system
+          ./multi_component_multi_system
+          ./multi_component_system
+
+  build-debug-no-tests:
+    runs-on: [self-hosted, linux]
+    needs: run-release-demos
+    container:
+      image: ${{vars.BUILD_IMAGE}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: build-windows-workflow
+          submodules: true
+
+      - name: Build in debug
+        run: |
+          cd build-windows-workflow
+          mkdir build
+          cd build
+          cmake -DBUILD_TRECS_TESTS=0 ..
+          make -j4
+          cd ..
+
+  run-debug-tests:
+    needs: build-debug-no-tests
+    runs-on: [self-hosted, Windows]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          path: build-windows-workflow
+
+      - name: Where the hell am I
+        run: |
+          pwd
+          ls
+
+      - name: Build in debug
+        run: |
+          cd build-windows-workflow
+          pushd .
+          mkdir build
+          cd build
+          cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=debug ..
+          mingw32-make -j4
+          popd
+
+      - name: Run ctest
+        run: |
+          cd build-windows-workflow/build
+          ctest -V --output-on-failure
