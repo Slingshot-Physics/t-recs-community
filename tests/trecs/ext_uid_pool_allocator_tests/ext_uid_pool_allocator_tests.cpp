@@ -6,6 +6,7 @@
 
 #include "catch.hpp"
 
+#include <iostream>
 #include <vector>
 
 typedef unsigned int uid_t;

@@ -1,0 +1,78 @@
+# Builds the project in multiple modes and runs all of the existing unit tests.
+
+name: "Build-Run-Windows"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+# Note that the container created by workflows maps part of the local volume to
+# the container. Specifically ~/actions-runner/_work. Successive jobs can reuse
+# the output of their predecessors without having to generate artifacts.
+jobs:
+
+  build-release:
+    runs-on: [self-hosted, Windows]
+    steps:
+      - name: Check git
+        run: git --version
+
+      - name: What's in the path?
+        run: echo $env:PATH
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: build-windows-workflow
+          submodules: true
+
+      - name: Where the hell am I
+        run: |
+          pwd
+          ls
+
+      - name: Build in release
+        run: |
+          cd build-windows-workflow
+          pushd .
+          mkdir build
+          cd build
+          cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=release ..
+          mingw32-make -j4
+          popd
+
+  build-debug:
+    needs: build-release
+    runs-on: [self-hosted, Windows]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          path: build-windows-workflow
+
+      - name: Where the hell am I
+        run: |
+          pwd
+          ls
+
+      - name: Delete old build, build in debug
+        run: |
+          cd build-windows-workflow
+          pushd .
+          mkdir build
+          cd build
+          cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=debug ..
+          mingw32-make -j4
+          popd

@@ -4,9 +4,12 @@
 
 #define CATCH_CONFIG_MAIN
 
+#define CATCH_CONFIG_DISABLE_EXCEPTIONS 0
+
 #include "catch.hpp"
 
 #include <cstddef>
+#include <iostream>
 #include <vector>
 
 template <int N>
@@ -16,13 +19,13 @@ struct component
 };
 
 // Instantiate the component manager.
-TEST_CASE( "instantiation" )
+TEST_CASE( "instantiation", "[ComponentManager]" )
 {
    trecs::ComponentManager cman(120);
 }
 
 // Try to insert an unregistered type into the component manager.
-TEST_CASE( "unregistered type" )
+TEST_CASE( "unregistered type", "[ComponentManager]" )
 {
    trecs::ComponentManager cman(120);
    int new_uid = cman.addComponent<float>(1, 1234.f);
@@ -38,7 +41,7 @@ TEST_CASE( "retrieve non-present UID", "[ComponentManager]" )
 }
 
 // Insert one component of one type into the component manager.
-TEST_CASE( "register one component" )
+TEST_CASE( "register one component", "[ComponentManager]" )
 {
    trecs::ComponentManager cman(120);
    cman.registerComponent<complicatedType_t<0> >();
@@ -878,10 +881,6 @@ TEST_CASE( "add up to the maximum number of different components", "[ComponentMa
    cman.registerComponent<component<509> >();
    cman.registerComponent<component<510> >();
    cman.registerComponent<component<511> >();
-
-   // cman.getNumComponents();
-
-   // REQUIRE( cman.getNumComponents() == trecs::max_num_signatures );
 
    REQUIRE( cman.getNumSignatures() == trecs::max_num_signatures );
 }

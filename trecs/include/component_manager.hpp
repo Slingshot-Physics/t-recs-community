@@ -2,11 +2,11 @@
 #define COMPONENT_MANAGER_HEADER
 
 #include "component_array_wrapper.hpp"
-#include "ecs_type_id.hpp"
 #include "ext_uid_pool_allocator.hpp"
 #include "pool_allocator_interface.hpp"
 #include "signature_manager.hpp"
 
+#include <iostream>
 #include <vector>
 
 namespace trecs

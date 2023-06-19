@@ -4,7 +4,6 @@ set(
     include/archetype.hpp
     include/component_array_wrapper.hpp
     include/component_manager.hpp
-    include/ecs_type_id.hpp
     include/ecs_types.hpp
     include/entity_manager.hpp
     include/ext_uid_pool_allocator.hpp

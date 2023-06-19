@@ -11,7 +11,7 @@ function( build_trecs_test target_name sources headers links config_files )
       ${sources}
       ${headers}
    )
-
+   add_test(NAME ${target} COMMAND ${target})
    set( test_binary_folder ${CMAKE_BINARY_DIR}/exec_tests )
 
    set_target_properties(

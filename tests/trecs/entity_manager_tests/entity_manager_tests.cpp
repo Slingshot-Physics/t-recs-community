@@ -1,6 +1,3 @@
-// A series of tests to increase feel-good-ness for the template pool allocator
-// class. This tests all of the core functionality of the pool allocator.
-
 #include "entity_manager.hpp"
 
 #include "complicated_types.hpp"
@@ -9,6 +6,7 @@
 
 #include "catch.hpp"
 
+#include <iostream>
 #include <set>
 #include <vector>
 
