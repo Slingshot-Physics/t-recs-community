@@ -58,7 +58,7 @@ namespace trecs
       return entity;
    }
 
-   const std::deque<uid_t> & Allocator::getEntities(void) const
+   const std::vector<uid_t> & Allocator::getEntities(void) const
    {
       return entities_.getUids();
    }

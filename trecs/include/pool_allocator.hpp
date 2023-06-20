@@ -7,8 +7,8 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
-#include <deque>
 #include <map>
+#include <vector>
 
 #include <iostream>
 
@@ -97,7 +97,7 @@ namespace trecs
             T & last_component = getComponentFromIndex(last_free_index_);
             last_component = component;
 
-            uid_pool_.pop_front();
+            uid_pool_.erase(uid_pool_.begin());
             uids_.push_back(new_component_uid);
 
             uid_to_index_[new_component_uid] = last_free_index_;
@@ -163,8 +163,8 @@ namespace trecs
             last_free_index_ -= index_increment_;
          }
 
-         // Returns a deque of all of the active UIDs in the pool.
-         const std::deque<uid_t> & getUids(void) const
+         // Returns a container of all of the active UIDs in the pool.
+         const std::vector<uid_t> & getUids(void) const
          {
             return uids_;
          }
@@ -218,10 +218,10 @@ namespace trecs
 
          // The pool of remaining available unique IDs to new elements in this
          // allocator.
-         std::deque<uid_t> uid_pool_;
+         std::vector<uid_t> uid_pool_;
 
          // The UIDs currently being used by elements in this allocator.
-         std::deque<uid_t> uids_;
+         std::vector<uid_t> uids_;
 
          // A conversion from UID to index.
          std::map<uid_t, size_t> uid_to_index_;

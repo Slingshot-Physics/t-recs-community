@@ -54,7 +54,7 @@ namespace trecs
       }
 
       uid_t new_entity_uid = uid_pool_.front();
-      uid_pool_.pop_front();
+      uid_pool_.erase(uid_pool_.begin());
       uids_.push_back(new_entity_uid);
 
       archetypes_[new_entity_uid].reset();
@@ -84,7 +84,7 @@ namespace trecs
       return std::find(uids_.begin(), uids_.end(), entity_uid) != uids_.end();
    }
 
-   const std::deque<uid_t> & EntityManager::getUids(void) const
+   const std::vector<uid_t> & EntityManager::getUids(void) const
    {
       return uids_;
    }

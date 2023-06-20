@@ -36,7 +36,7 @@ namespace trecs
 
          uid_t addEntity(uid_t node_entity);
 
-         const std::deque<uid_t> & getEntities(void) const;
+         const std::vector<uid_t> & getEntities(void) const;
 
          void removeEntity(uid_t entity_uid);
 

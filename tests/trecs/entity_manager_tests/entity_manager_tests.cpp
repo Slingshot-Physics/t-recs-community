@@ -165,7 +165,7 @@ TEST_CASE( "add archetypes to existing entities", "[EntityManager]" )
       }
    }
 
-   const std::deque<trecs::uid_t> uids = em.getUids();
+   const std::vector<trecs::uid_t> uids = em.getUids();
    REQUIRE( uids.size() == em.getUids().size() );
 
    // Verify that all of the archetypes that were set during the big loop are

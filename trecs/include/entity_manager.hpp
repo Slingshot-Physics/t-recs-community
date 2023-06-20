@@ -5,7 +5,6 @@
 #include "ecs_types.hpp"
 
 #include <cstddef>
-#include <deque>
 #include <vector>
 
 namespace trecs
@@ -35,8 +34,8 @@ namespace trecs
          // Returns false if the given entity UID is not active.
          bool entityActive(uid_t entity_uid) const;
 
-         // Retrieves all active entity UIDs.
-         const std::deque<uid_t> & getUids(void) const;
+         // Returns all active entity UIDs.
+         const std::vector<uid_t> & getUids(void) const;
 
          // Allows external designation of the archetype of a given entity.
          bool setArchetype(
@@ -64,9 +63,9 @@ namespace trecs
 
          uid_t max_entity_uid_;
 
-         std::deque<uid_t> uid_pool_;
+         std::vector<uid_t> uid_pool_;
 
-         std::deque<uid_t> uids_;
+         std::vector<uid_t> uids_;
 
          std::vector<DefaultArchetype> archetypes_;
 
