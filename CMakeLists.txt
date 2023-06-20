@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 3.16 )
 
-set(CMAKE_CXX_STANDARD 11)
+set( CMAKE_CXX_STANDARD 11 )
 
 project(
     TRECS
@@ -9,15 +9,20 @@ project(
 
 enable_testing()
 
-option(BUILD_TRECS_TESTS "Build tests with the ECS framework" ON)
+option( BUILD_TRECS_TESTS "Build tests with the ECS framework" ON )
 
 # Some of the template instantiations make very big .obj files, but this only
 # seems to be a problem on Windows with mingw.
-if(WIN32)
+if( WIN32 )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj")
 endif()
 
 include( ${CMAKE_SOURCE_DIR}/cmake/functions.cmake )
 
 add_subdirectory( trecs )
-add_subdirectory( tests )
+
+# Disable this in a higher level by writing:
+#    set( BUILD_TRECS_TESTS 0 )
+if ( BUILD_TRECS_TESTS )
+    add_subdirectory( tests )
+endif()
