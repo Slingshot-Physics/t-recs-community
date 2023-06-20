@@ -34,6 +34,17 @@ TEST_CASE( "merge valid signatures", "[Archetype]" )
    REQUIRE( archetype.at(0) == ((1 << 5) | (1 << 8)) );
 }
 
+TEST_CASE( "empty archetypes don't support anything", "[Archetype]" )
+{
+   trecs::Archetype<4> blank;
+   trecs::Archetype<4> archetype;
+   
+   archetype.mergeSignature(5);
+   archetype.mergeSignature(8);
+
+   REQUIRE( !blank.supports(archetype) );
+}
+
 TEST_CASE( "merge invalid signatures", "[Archetype]" )
 {
    trecs::Archetype<4> archetype;
@@ -110,6 +121,18 @@ TEST_CASE( "check for equality", "[Archetype]" )
    b.mergeSignature(123);
 
    REQUIRE( (a == b) );
+
+   // Test the negative case
+   trecs::Archetype<4> c, d;
+   c.mergeSignature(3);
+   c.mergeSignature(2);
+   c.mergeSignature(1);
+   d.mergeSignature(3);
+   d.mergeSignature(2);
+   d.mergeSignature(1);
+   d.mergeSignature(0);
+
+   REQUIRE( c != d );
 }
 
 TEST_CASE( "check for inequality", "[Archetype]" )
@@ -229,7 +252,6 @@ TEST_CASE( "map of archetypes", "[Archetype]" )
 
 TEST_CASE( "verify signature support", "[Archetype]" )
 {
-
    trecs::Archetype<4> a;
    a.mergeSignature(1);
    a.mergeSignature(6);
@@ -239,26 +261,79 @@ TEST_CASE( "verify signature support", "[Archetype]" )
    a.mergeSignature(70);
    a.mergeSignature(127);
 
-   REQUIRE( a.supportsSignature(1) );
-   REQUIRE( a.supportsSignature(6) );
-   REQUIRE( a.supportsSignature(22) );
-   REQUIRE( a.supportsSignature(38) );
-   REQUIRE( a.supportsSignature(63) );
-   REQUIRE( a.supportsSignature(70) );
-   REQUIRE( a.supportsSignature(127) );
+   REQUIRE( a.supports(1) );
+   REQUIRE( a.supports(6) );
+   REQUIRE( a.supports(22) );
+   REQUIRE( a.supports(38) );
+   REQUIRE( a.supports(63) );
+   REQUIRE( a.supports(70) );
+   REQUIRE( a.supports(127) );
 
-   REQUIRE( !a.supportsSignature(0) );
-   REQUIRE( !a.supportsSignature(2) );
-   REQUIRE( !a.supportsSignature(5) );
-   REQUIRE( !a.supportsSignature(7) );
-   REQUIRE( !a.supportsSignature(21) );
-   REQUIRE( !a.supportsSignature(23) );
-   REQUIRE( !a.supportsSignature(37) );
-   REQUIRE( !a.supportsSignature(39) );
-   REQUIRE( !a.supportsSignature(62) );
-   REQUIRE( !a.supportsSignature(64) );
-   REQUIRE( !a.supportsSignature(69) );
-   REQUIRE( !a.supportsSignature(71) );
-   REQUIRE( !a.supportsSignature(125) );
-   REQUIRE( !a.supportsSignature(126) );
+   REQUIRE( !a.supports(0) );
+   REQUIRE( !a.supports(2) );
+   REQUIRE( !a.supports(5) );
+   REQUIRE( !a.supports(7) );
+   REQUIRE( !a.supports(21) );
+   REQUIRE( !a.supports(23) );
+   REQUIRE( !a.supports(37) );
+   REQUIRE( !a.supports(39) );
+   REQUIRE( !a.supports(62) );
+   REQUIRE( !a.supports(64) );
+   REQUIRE( !a.supports(69) );
+   REQUIRE( !a.supports(71) );
+   REQUIRE( !a.supports(125) );
+   REQUIRE( !a.supports(126) );
+}
+
+TEST_CASE( "verify archetype support works", "[Archetype]")
+{
+   trecs::Archetype<4> a, b;
+   a.mergeSignature(1);
+   a.mergeSignature(6);
+   a.mergeSignature(22);
+   a.mergeSignature(38);
+   a.mergeSignature(63);
+   a.mergeSignature(70);
+   a.mergeSignature(127);
+
+   b.mergeSignature(22);
+   b.mergeSignature(38);
+   b.mergeSignature(63);
+
+   // Since the intersection of B and A is B, then B supports A.
+   REQUIRE( b.supports(a) );
+
+   // Since the intersection of B and A is B, then A does not support B.
+   REQUIRE( !a.supports(b) );
+}
+
+TEST_CASE( "verify empty method works", "[Archetype]")
+{
+   trecs::Archetype<4> a;
+
+   REQUIRE( a.empty() );
+
+   trecs::Archetype<16> b;
+   
+   REQUIRE( b.empty() );
+}
+
+TEST_CASE( "verify copy constructor works", "[Archetype]")
+{
+   trecs::Archetype<6> a;
+   a.mergeSignature(32 * 4 + 31);
+   a.mergeSignature(32 * 3 + 31);
+   a.mergeSignature(32 * 2 + 31);
+   a.mergeSignature(32 * 1 + 31);
+   a.mergeSignature(32 * 0 + 31);
+
+   trecs::Archetype<6> b;
+
+   // Since B is empty, B does not support A.
+   REQUIRE( !b.supports(a) );
+
+   b = a;
+
+   REQUIRE( b.supports(a) );
+   REQUIRE( (b == a) );
 }

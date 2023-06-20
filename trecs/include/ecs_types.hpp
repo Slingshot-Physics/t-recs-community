@@ -9,15 +9,13 @@ namespace trecs
 
    typedef uint8_t signature_t;
 
-   typedef uint64_t archetype_t;
-
    typedef uint32_t query_t;
 
    const auto error_query = __UINT32_MAX__;
 
-   const auto max_num_signatures = 8 * sizeof(archetype_t) - 1;
+   const auto max_num_signatures = 128 - 1;
 
-   const auto error_signature = 8 * sizeof(archetype_t) - 1;
+   const auto error_signature = 128 - 1;
 
    typedef enum edge_flag
    {

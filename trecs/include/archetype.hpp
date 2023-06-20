@@ -26,7 +26,23 @@ namespace trecs
             }
          }
 
+         Archetype(const Archetype<BlockCount> & other)
+         {
+            for (int i = 0; i < BlockCount; ++i)
+            {
+               archetypes_[i] = other.archetypes_[i];
+            }
+         }
+
          ~Archetype(void) = default;
+
+         void reset(void)
+         {
+            for (int i = 0; i < BlockCount; ++i)
+            {
+               archetypes_[i] = 0;
+            }
+         }
 
          void mergeSignature(const signature_t sig)
          {
@@ -40,19 +56,59 @@ namespace trecs
             archetypes_[arch.block] &= (~arch.bits);
          }
 
-         bool supportsSignature(const signature_t sig) const
+         bool supports(const signature_t sig) const
          {
             block_archetype_t arch = signatureToArchetype(sig);
             return (archetypes_[arch.block] & arch.bits) == arch.bits;
+         }
+
+         bool supports(const Archetype<BlockCount> & arch) const
+         {
+            if (empty())
+            {
+               return false;
+            }
+
+            for (int i = 0; i < BlockCount; ++i)
+            {
+               if ((archetypes_[i] & arch.archetypes_[i]) != archetypes_[i])
+               {
+                  return false;
+               }
+            }
+
+            return true;
+         }
+
+         // Returns true if the archetype has zero associated component
+         // signatures. Returns false otherwise.
+         bool empty(void) const
+         {
+            for (int i = 0; i < BlockCount; ++i)
+            {
+               if (archetypes_[i] != 0)
+               {
+                  return false;
+               }
+            }
+
+            return true;
+         }
+
+         void print(void) const
+         {
+            std::cout << "Archetype:\n";
+            for (int i = 0; i < BlockCount; ++i)
+            {
+               std::cout << "\t" << archetypes_[i] << "\n";
+            }
          }
 
          bool operator==(const Archetype<BlockCount> & other) const
          {
             for (int i = 0; i < BlockCount; ++i)
             {
-               if (
-                  (archetypes_[i] & other.archetypes_[i]) != other.archetypes_[i]
-               )
+               if (archetypes_[i] != other.archetypes_[i])
                {
                   return false;
                }
@@ -120,6 +176,8 @@ namespace trecs
          }
 
    };
+
+   typedef Archetype<4> DefaultArchetype;
 }
 
 #endif

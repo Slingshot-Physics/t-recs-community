@@ -1,6 +1,7 @@
 #ifndef NODE_ENTITY_MANAGER_HEADER
 #define NODE_ENTITY_MANAGER_HEADER
 
+#include "archetype.hpp"
 #include "ecs_types.hpp"
 
 #include <cstddef>
@@ -38,10 +39,20 @@ namespace trecs
          const std::deque<uid_t> & getUids(void) const;
 
          // Allows external designation of the archetype of a given entity.
-         bool setArchetype(uid_t entity_uid, archetype_t archetype);
+         bool setArchetype(
+            uid_t entity_uid, const DefaultArchetype & archetype
+         );
+
+         void addComponentSignature(
+            uid_t entity_uid, signature_t component_sig
+         );
+
+         void removeComponentSignature(
+            uid_t entity_uid, signature_t component_sig
+         );
 
          // Returns the given entity's archetype
-         archetype_t getArchetype(uid_t entity_uid) const;
+         DefaultArchetype getArchetype(uid_t entity_uid) const;
 
          std::size_t size(void) const;
 
@@ -57,7 +68,7 @@ namespace trecs
 
          std::deque<uid_t> uids_;
 
-         std::vector<archetype_t> archetypes_;
+         std::vector<DefaultArchetype> archetypes_;
 
    };
 

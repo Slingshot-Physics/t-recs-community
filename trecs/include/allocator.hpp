@@ -1,7 +1,7 @@
 #ifndef ALLOCATOR_HEADER
 #define ALLOCATOR_HEADER
 
-// ECS stuff
+#include "archetype.hpp"
 #include "component_manager.hpp"
 #include "ecs_types.hpp"
 #include "entity_manager.hpp"
@@ -51,11 +51,9 @@ namespace trecs
          edge_t updateEdge(uid_t entity, uid_t node_entity);
 
          template <typename Component_T>
-         archetype_t getComponentArchetype(void) const
+         signature_t getComponentSignature(void) const
          {
-            return signatureToArchetype(
-               components_.getSignature<Component_T>()
-            );
+            return components_.getSignature<Component_T>();
          }
 
          // Attempts to add a component to an entity UID. If the entity UID is
@@ -73,16 +71,17 @@ namespace trecs
                return false;
             }
 
-            archetype_t component_arch = getComponentArchetype<Component_T>();
-            archetype_t old_arch = entities_.getArchetype(entity_uid);
+            DefaultArchetype old_arch = entities_.getArchetype(entity_uid);
+            signature_t component_sig = getComponentSignature<Component_T>();
 
-            if ((old_arch & component_arch) > 0)
+            if (old_arch.supports(component_sig))
             {
-               std::cout << "Component with signature " << component_arch << " already exists on entity " << entity_uid << "\n";
+               std::cout << "Component with signature " << component_sig << " already exists on entity " << entity_uid << "\n";
                return false;
             }
 
-            archetype_t new_arch = old_arch | component_arch;
+            DefaultArchetype new_arch = old_arch;
+            new_arch.mergeSignature(component_sig);
             components_.addComponent<Component_T>(entity_uid, component);
             entities_.setArchetype(entity_uid, new_arch);
             queries_.moveEntity(entity_uid, old_arch, new_arch);
@@ -104,10 +103,10 @@ namespace trecs
                return false;
             }
 
-            archetype_t component_arch = getComponentArchetype<Component_T>();
-            archetype_t old_arch = entities_.getArchetype(entity_uid);
+            DefaultArchetype old_arch = entities_.getArchetype(entity_uid);
+            signature_t component_sig = getComponentSignature<Component_T>();
 
-            if ((old_arch & component_arch) > 0)
+            if (old_arch.supports(component_sig))
             {
                Component_T * old_component = components_.getComponent<Component_T>(entity_uid);
                if (old_component == nullptr)
@@ -119,7 +118,8 @@ namespace trecs
                return true;
             }
 
-            archetype_t new_arch = old_arch | component_arch;
+            DefaultArchetype new_arch = old_arch;
+            new_arch.mergeSignature(component_sig);
             components_.addComponent<Component_T>(entity_uid, component);
             entities_.setArchetype(entity_uid, new_arch);
             queries_.moveEntity(entity_uid, old_arch, new_arch);
@@ -138,10 +138,10 @@ namespace trecs
                return nullptr;
             }
 
-            archetype_t component_arch = getComponentArchetype<Component_T>();
-            archetype_t entity_arch = entities_.getArchetype(entity_uid);
+            DefaultArchetype old_arch = entities_.getArchetype(entity_uid);
+            signature_t component_sig = getComponentSignature<Component_T>();
 
-            if ((entity_arch & component_arch) == 0)
+            if (!old_arch.supports(component_sig))
             {
                return nullptr;
             }
@@ -163,21 +163,23 @@ namespace trecs
                return;
             }
 
-            archetype_t component_arch = getComponentArchetype<Component_T>();
+            signature_t component_sig = getComponentSignature<Component_T>();
 
-            if (component_arch == 0)
+            if (component_sig == error_signature)
             {
                return;
             }
 
-            archetype_t old_arch = entities_.getArchetype(entity_uid);
-            if ((old_arch & component_arch) == 0)
+            DefaultArchetype old_arch = entities_.getArchetype(entity_uid);
+
+            if (!old_arch.supports(component_sig))
             {
                return;
             }
 
             components_.removeComponent<Component_T>(entity_uid);
-            archetype_t new_arch = old_arch & (~component_arch);
+            DefaultArchetype new_arch = old_arch;
+            new_arch.removeSignature(component_sig);
             entities_.setArchetype(entity_uid, new_arch);
             queries_.moveEntity(entity_uid, old_arch, new_arch);
          }
@@ -194,11 +196,11 @@ namespace trecs
             return systems_.registerSystem<System_T>();
          }
 
-         bool addArchetypeQuery(archetype_t arch)
+         bool addArchetypeQuery(const DefaultArchetype & arch)
          {
-            if (arch == 0)
+            if (arch.empty())
             {
-               std::cout << "Invalid archetype " << arch << " requested for query.\n";
+               std::cout << "Empty archetype requested for query.\n";
                return false;
             }
 
@@ -208,12 +210,12 @@ namespace trecs
          template <class...Args>
          void addArchetypeQuery(Args...args)
          {
-            archetype_t arch = 0;
+            DefaultArchetype arch;
             fancyAddArchetypeQuery(arch, args...);
 
-            if (arch == 0)
+            if (arch.empty())
             {
-               std::cout << "Invalid archetype " << arch << " requested for query.\n";
+               std::cout << "Empty archetype requested for query.\n";
                return;
             }
 
@@ -221,9 +223,9 @@ namespace trecs
          }
 
          template <class...Args>
-         archetype_t getArchetype(Args...args)
+         DefaultArchetype getArchetype(Args...args)
          {
-            archetype_t arch = 0;
+            DefaultArchetype arch;
             fancyGetArchetype(arch, args...);
             return arch;
          }
@@ -234,14 +236,14 @@ namespace trecs
          //    - Runs the initialize method
          void initializeSystems(void);
 
-         auto getQueryEntities(archetype_t query) const -> const std::unordered_set<trecs::uid_t> &
+         auto getQueryEntities(const DefaultArchetype & query) const -> const std::unordered_set<trecs::uid_t> &
          {
             if (!queries_.supportsArchetype(query))
             {
                return empty_set_;
             }
 
-            return queries_.getArchetypeEntities().at(query);
+            return queries_.getArchetypeEntities(query);
          }
 
       private:
@@ -250,7 +252,7 @@ namespace trecs
 
          const std::unordered_set<uid_t> empty_set_;
 
-         archetype_t edge_archetype_;
+         DefaultArchetype edge_archetype_;
 
          EntityManager entities_;
 
@@ -264,33 +266,29 @@ namespace trecs
          // the edge entities.
          void removeNodeEntityFromEdge(uid_t entity_uid);
 
-         archetype_t signatureToArchetype(signature_t sig) const;
-
-         void fancyAddArchetypeQuery(archetype_t & arch)
+         void fancyAddArchetypeQuery(DefaultArchetype & arch)
          {
-            arch |= 0;
+            (void)arch;
          }
 
          template <class First, class...TheRest>
-         void fancyAddArchetypeQuery(archetype_t & arch, First f, TheRest...args)
+         void fancyAddArchetypeQuery(DefaultArchetype & arch, First f, TheRest...args)
          {
             (void)f;
-            archetype_t component_arch = getComponentArchetype<First>();
-            arch |= component_arch;
+            arch.mergeSignature(getComponentSignature<First>());
             fancyAddArchetypeQuery(arch, args...);
          }
 
-         void fancyGetArchetype(archetype_t & arch)
+         void fancyGetArchetype(DefaultArchetype & arch)
          {
-            arch |= 0;
+            (void)arch;
          }
 
          template <class First, class...TheRest>
-         void fancyGetArchetype(archetype_t & arch, First f, TheRest...args)
+         void fancyGetArchetype(DefaultArchetype & arch, First f, TheRest...args)
          {
             (void)f;
-            archetype_t component_arch = getComponentArchetype<First>();
-            arch |= component_arch;
+            arch.mergeSignature(getComponentSignature<First>());
             fancyGetArchetype(arch, args...);
          }
 

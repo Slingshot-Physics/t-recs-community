@@ -66,7 +66,6 @@ namespace trecs
 
          ExternalUidPoolAllocator<Component_T> * component_array_;
 
-         // ComponentArrayWrapper(void);
    };
 }
 

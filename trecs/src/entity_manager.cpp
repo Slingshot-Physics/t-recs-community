@@ -12,7 +12,7 @@ namespace trecs
       , max_entity_uid_(
          max_entity_uid > meta_max_entity_uid_ ? meta_max_entity_uid_ : max_entity_uid
       )
-      , archetypes_(max_entity_uid_, 0)
+      , archetypes_(max_entity_uid_, DefaultArchetype())
    {
       assert(max_entity_uid_ > 0);
 
@@ -42,7 +42,7 @@ namespace trecs
 
       for (uid_t i = 0; i < max_entity_uid_; ++i)
       {
-         archetypes_[i] = 0;
+         archetypes_[i].reset();
       }
    }
 
@@ -57,7 +57,7 @@ namespace trecs
       uid_pool_.pop_front();
       uids_.push_back(new_entity_uid);
 
-      archetypes_[new_entity_uid] = 0;
+      archetypes_[new_entity_uid].reset();
 
       return new_entity_uid;
    }
@@ -76,7 +76,7 @@ namespace trecs
       uids_.erase(uids_it);
       uid_pool_.push_back(removed_entity_uid);
 
-      archetypes_[removed_entity_uid] = 0;
+      archetypes_[removed_entity_uid].reset();
    }
 
    bool EntityManager::entityActive(uid_t entity_uid) const
@@ -89,7 +89,9 @@ namespace trecs
       return uids_;
    }
 
-   bool EntityManager::setArchetype(uid_t entity_uid, archetype_t archetype)
+   bool EntityManager::setArchetype(
+      uid_t entity_uid, const DefaultArchetype & archetype
+   )
    {
       if (std::find(uids_.begin(), uids_.end(), entity_uid) == uids_.end())
       {
@@ -101,7 +103,33 @@ namespace trecs
       return true;
    }
 
-   archetype_t EntityManager::getArchetype(uid_t entity_uid) const
+   void EntityManager::addComponentSignature(
+      uid_t entity_uid, signature_t component_sig
+   )
+   {
+      if (std::find(uids_.begin(), uids_.end(), entity_uid) == uids_.end())
+      {
+         std::cout << "Attempting to modify the archetype of a non-existent entity\n";
+         return;
+      }
+
+      archetypes_[entity_uid].mergeSignature(component_sig);
+   }
+
+   void EntityManager::removeComponentSignature(
+      uid_t entity_uid, signature_t component_sig
+   )
+   {
+      if (std::find(uids_.begin(), uids_.end(), entity_uid) == uids_.end())
+      {
+         std::cout << "Attempting to modify the archetype of a non-existent entity\n";
+         return;
+      }
+
+      archetypes_[entity_uid].removeSignature(component_sig);
+   }
+
+   DefaultArchetype EntityManager::getArchetype(uid_t entity_uid) const
    {
       return archetypes_[entity_uid];
    }

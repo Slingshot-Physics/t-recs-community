@@ -1,10 +1,11 @@
 #ifndef QUERY_MANAGER_HEADER
 #define QUERY_MANAGER_HEADER
 
+#include "archetype.hpp"
 #include "ecs_types.hpp"
 
 #include <iostream>
-#include <unordered_map>
+#include <map>
 #include <unordered_set>
 #include <vector>
 
@@ -14,7 +15,7 @@ namespace trecs
    {
       public:
 
-         bool tryAddArchetype(trecs::archetype_t arch)
+         bool tryAddArchetype(const DefaultArchetype & arch)
          {
             for (const auto & typed_entities : archetypes_to_entities_)
             {
@@ -29,7 +30,7 @@ namespace trecs
             return true;
          }
 
-         query_t addArchetypeQuery(trecs::archetype_t arch)
+         query_t addArchetypeQuery(const DefaultArchetype & arch)
          {
             if (archetypes_to_entities_.find(arch) == archetypes_to_entities_.end())
             {
@@ -51,8 +52,8 @@ namespace trecs
 
          void moveEntity(
             trecs::uid_t entity,
-            trecs::archetype_t old_arch,
-            trecs::archetype_t new_arch
+            const DefaultArchetype & old_arch,
+            const DefaultArchetype & new_arch
          )
          {
             // Any incoming entity's archetype must have *at least* all of the
@@ -76,7 +77,7 @@ namespace trecs
                ++typed_entities_iter
             )
             {
-               if ((typed_entities_iter->first & old_arch) == typed_entities_iter->first)
+               if (typed_entities_iter->first.supports(old_arch))
                {
                   typed_entities_iter->second.erase(entity);
                }
@@ -88,7 +89,7 @@ namespace trecs
                ++typed_entities_iter
             )
             {
-               if ((typed_entities_iter->first & new_arch) == typed_entities_iter->first)
+               if (typed_entities_iter->first.supports(new_arch))
                {
                   typed_entities_iter->second.insert(entity);
                }
@@ -103,11 +104,11 @@ namespace trecs
             }
          }
 
-         bool supportsArchetype(trecs::archetype_t arch) const
+         bool supportsArchetype(const DefaultArchetype & arch) const
          {
             for (const auto & typed_entities : archetypes_to_entities_)
             {
-               if ((typed_entities.first & arch) == typed_entities.first)
+               if (typed_entities.first.supports(arch))
                {
                   return true;
                }
@@ -115,26 +116,32 @@ namespace trecs
             return false;
          }
 
-         auto getArchetypeEntities(void) const -> const std::unordered_map<trecs::archetype_t, std::unordered_set<trecs::uid_t> > &
+         auto getArchetypeEntities(
+            const DefaultArchetype & arch
+         ) const -> const std::unordered_set<trecs::uid_t> &
          {
-            return archetypes_to_entities_;
+            return archetypes_to_entities_.at(arch);
          }
 
-         auto getArchetypeEntities(void) -> std::unordered_map<trecs::archetype_t, std::unordered_set<trecs::uid_t> > &
+         auto getArchetypeEntities(
+            const DefaultArchetype & arch
+         ) -> std::unordered_set<trecs::uid_t > &
          {
-            return archetypes_to_entities_;
+            return archetypes_to_entities_.at(arch);
          }
 
-         auto getArchetypeEntities(const query_t query_id) const -> const std::unordered_set<trecs::uid_t> &
+         auto getArchetypeEntities(
+            const query_t query_id
+         ) const -> const std::unordered_set<trecs::uid_t> &
          {
             return archetypes_to_entities_.at(archetypes_.at(query_id));
          }
 
       private:
 
-         std::unordered_map<trecs::archetype_t, std::unordered_set<trecs::uid_t> > archetypes_to_entities_;
+         std::map<DefaultArchetype, std::unordered_set<trecs::uid_t> > archetypes_to_entities_;
 
-         std::vector<trecs::archetype_t> archetypes_;
+         std::vector<DefaultArchetype> archetypes_;
 
    };
 

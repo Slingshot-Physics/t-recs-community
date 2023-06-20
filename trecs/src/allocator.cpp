@@ -9,9 +9,8 @@ namespace trecs
       , components_(max_num_entities_)
    {
       registerComponent<trecs::edge_t>();
-      edge_archetype_ = getComponentArchetype<trecs::edge_t>();
+      edge_archetype_.mergeSignature(getComponentSignature<trecs::edge_t>());
       queries_.tryAddArchetype(edge_archetype_);
-      std::cout << "edge archetype: " << edge_archetype_ << "\n";
    }
 
    Allocator::Allocator(unsigned int max_num_entities)
@@ -20,9 +19,8 @@ namespace trecs
       , components_(max_num_entities_)
    {
       registerComponent<trecs::edge_t>();
-      edge_archetype_ = getComponentArchetype<trecs::edge_t>();
+      edge_archetype_.mergeSignature(getComponentSignature<trecs::edge_t>());
       queries_.tryAddArchetype(edge_archetype_);
-      std::cout << "edge archetype: " << edge_archetype_ << "\n";
    }
 
    void Allocator::clear(void)
@@ -172,11 +170,4 @@ namespace trecs
       systems_.initializeSystems(*this);
    }
 
-   archetype_t Allocator::signatureToArchetype(signature_t sig) const
-   {
-      // The archetype is set to zero if the signature is the error signature.
-      archetype_t arch = (sig != error_signature);
-      arch <<= sig;
-      return arch;
-   }
 }
