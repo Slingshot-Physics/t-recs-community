@@ -188,9 +188,9 @@ TEST_CASE( "the allocator queries get the correct archetypes", "[allocator]" )
    allocator.registerComponent<int>();
    allocator.registerComponent<complicatedType_t<0> >();
 
-   trecs::query_t float_query = allocator.addArchetypeQuery(float{});
-   trecs::query_t int_query = allocator.addArchetypeQuery(int{});
-   trecs::query_t rb_query = allocator.addArchetypeQuery(complicatedType_t<0>{});
+   trecs::query_t float_query = allocator.addArchetypeQuery<float>();
+   trecs::query_t int_query = allocator.addArchetypeQuery<int>();
+   trecs::query_t rb_query = allocator.addArchetypeQuery<complicatedType_t<0> >();
 
    REQUIRE( allocator.getQueryEntities(float_query).size() == 0 );
    REQUIRE( allocator.getQueryEntities(int_query).size() == 0 );
@@ -207,9 +207,9 @@ TEST_CASE( "systems get the correct entities", "[allocator]" )
    allocator.registerComponent<int>();
    allocator.registerComponent<complicatedType_t<0> >();
 
-   trecs::query_t float_query = allocator.addArchetypeQuery(float{});
-   trecs::query_t int_query = allocator.addArchetypeQuery(int{});
-   trecs::query_t rb_query = allocator.addArchetypeQuery(complicatedType_t<0>{});
+   trecs::query_t float_query = allocator.addArchetypeQuery<float>();
+   trecs::query_t int_query = allocator.addArchetypeQuery<int>();
+   trecs::query_t rb_query = allocator.addArchetypeQuery<complicatedType_t<0> >();
 
    std::vector<trecs::uid_t> entities;
 
@@ -246,12 +246,9 @@ TEST_CASE( "variadic query registration for unregistered components", "[allocato
 {
    trecs::Allocator allocator;
 
-   trecs::query_t funky_query = allocator.addArchetypeQuery(
-      float{},
-      int{},
-      complicatedType_t<0>{},
-      complicatedType_t<1>{}
-   );
+   trecs::query_t funky_query = allocator.addArchetypeQuery<
+      float, int, complicatedType_t<0>, complicatedType_t<1>
+   >();
 
    REQUIRE( allocator.getQueryEntities(funky_query).size() == 0 );
 }
@@ -265,12 +262,9 @@ TEST_CASE( "variadic query registration, component addition, component removal, 
    allocator.registerComponent<complicatedType_t<0> >();
    allocator.registerComponent<complicatedType_t<1> >();
 
-   trecs::query_t funky_query = allocator.addArchetypeQuery(
-      float{},
-      int{},
-      complicatedType_t<0>{},
-      complicatedType_t<1>{}
-   );
+   trecs::query_t funky_query = allocator.addArchetypeQuery<
+      float, int, complicatedType_t<0>, complicatedType_t<1>
+   >();
 
    trecs::uid_t new_entity = allocator.addEntity();
 
@@ -301,20 +295,20 @@ TEST_CASE( "verify that adding and removing components changes query output", "[
 
    trecs::query_t queries[4] = {
       (
-         allocator.addArchetypeQuery(int{})
+         allocator.addArchetypeQuery<int>()
       ),
       (
-         allocator.addArchetypeQuery(int{}, float{})
+         allocator.addArchetypeQuery<int, float>()
       ),
       (
-         allocator.addArchetypeQuery(
-            int{}, float{}, complicatedType_t<0>{}
-         )
+         allocator.addArchetypeQuery<
+            int, float, complicatedType_t<0>
+         >()
       ),
       (
-         allocator.addArchetypeQuery(
-            int{}, float{}, complicatedType_t<0>{}, complicatedType_t<1>{}
-         )
+         allocator.addArchetypeQuery<
+            int, float, complicatedType_t<0>, complicatedType_t<1>
+         >()
       )
    };
 
@@ -374,38 +368,27 @@ TEST_CASE( "verify adding the same archetype query multiple times results in the
 
    trecs::query_t queries[4] = {
       (
-         allocator.addArchetypeQuery(int{})
+         // allocator.addArchetypeQuery(int{})
+         allocator.addArchetypeQuery<int>()
       ),
       (
-         allocator.addArchetypeQuery(int{}, float{})
+         allocator.addArchetypeQuery<int, float>()
       ),
       (
-         allocator.addArchetypeQuery(
-            int{}, float{}, complicatedType_t<0>{}
-         )
+         allocator.addArchetypeQuery<int, float, complicatedType_t<0> >()
       ),
       (
-         allocator.addArchetypeQuery(
-            int{}, float{}, complicatedType_t<0>{}, complicatedType_t<1>{}
-         )
+         allocator.addArchetypeQuery<int, float, complicatedType_t<0>, complicatedType_t<1> >()
       )
    };
 
-   trecs::query_t query_a = allocator.addArchetypeQuery(
-      int{}, float{}
-   );
+   trecs::query_t query_a = allocator.addArchetypeQuery<int, float>();
 
-   trecs::query_t query_b = allocator.addArchetypeQuery(
-      int{}, float{}
-   );
+   trecs::query_t query_b = allocator.addArchetypeQuery<int, float>();
 
-   trecs::query_t query_c = allocator.addArchetypeQuery(
-      int{}, complicatedType_t<0>{}, float{}
-   );
+   trecs::query_t query_c = allocator.addArchetypeQuery<int, complicatedType_t<0>, float>();
 
-   trecs::query_t query_d = allocator.addArchetypeQuery(
-      int{}, complicatedType_t<0>{}, float{}
-   );
+   trecs::query_t query_d = allocator.addArchetypeQuery<int, complicatedType_t<0>, float>();
 
    REQUIRE( query_a == query_b );
 

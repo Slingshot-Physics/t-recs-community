@@ -1,3 +1,4 @@
+add_subdirectory( _tests )
 add_subdirectory( allocator_tests )
 add_subdirectory( archetype_tests )
 add_subdirectory( component_manager_tests )

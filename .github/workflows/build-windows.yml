@@ -52,6 +52,11 @@ jobs:
           mingw32-make -j4
           popd
 
+      # - name: Run ctest
+      #   run: |
+      #     cd build-windows-workflow/build
+      #     ctest -V
+
   build-debug:
     needs: build-release
     runs-on: [self-hosted, Windows]
@@ -67,7 +72,7 @@ jobs:
           pwd
           ls
 
-      - name: Delete old build, build in debug
+      - name: Build in debug
         run: |
           cd build-windows-workflow
           pushd .
@@ -76,3 +81,8 @@ jobs:
           cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=debug ..
           mingw32-make -j4
           popd
+
+      # - name: Run ctest
+      #   run: |
+      #     cd build-windows-workflow/build
+      #     ctest -V

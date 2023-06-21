@@ -32,7 +32,6 @@ namespace trecs
       uid_t nodeIdB;
       edge_flag_enum_t flag;
    } edge_t;
-
 }
 
 #endif

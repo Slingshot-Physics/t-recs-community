@@ -9,6 +9,7 @@
 #include "system_manager.hpp"
 #include "query_manager.hpp"
 
+#include <type_traits>
 #include <vector>
 
 namespace trecs
@@ -199,14 +200,14 @@ namespace trecs
          // Registers an archetype query with T-RECS. Returns a query ID for
          // the requested archetype. This method is called as:
          //
-         //    allocator.addArchetypeQuery(int{}, float{}, complicatedType{});
+         //    allocator.addArchetypeQuery<int, float, complicatedType>();
          //
          // with as many registered component types as desired.
          template <class...Args>
-         query_t addArchetypeQuery(Args...args)
+         query_t addArchetypeQuery(void)
          {
             DefaultArchetype arch;
-            fancyAddArchetypeQuery(arch, args...);
+            fancierGetArchetype<Args...>(arch);
 
             if (arch.empty())
             {
@@ -220,16 +221,16 @@ namespace trecs
          // Returns an archetype object based on the component types provided.
          // This method is called as:
          //
-         //    allocator.getArchetype(int{}, float{}, complicatedType{});
+         //    allocator.getArchetype<int, float, complicatedType>();
          //
          // with as many registered component types as desired. This method is
          // not used to register archetype queries with T-RECS. To register
          // archetype queries, see 'addArchetypeQuery'.
          template <class...Args>
-         DefaultArchetype getArchetype(Args...args)
+         DefaultArchetype getArchetype(void)
          {
             DefaultArchetype arch;
-            fancyGetArchetype(arch, args...);
+            fancierGetArchetype<Args...>(arch);
             return arch;
          }
 
@@ -266,30 +267,18 @@ namespace trecs
          // the edge entities.
          void removeNodeEntityFromEdge(uid_t entity_uid);
 
-         void fancyAddArchetypeQuery(DefaultArchetype & arch)
+         template <class T>
+         void fancierGetArchetype(DefaultArchetype & arch) const
          {
-            (void)arch;
+            arch.mergeSignature(getComponentSignature<T>());
          }
 
          template <class First, class...TheRest>
-         void fancyAddArchetypeQuery(DefaultArchetype & arch, First f, TheRest...args)
+         auto fancierGetArchetype(DefaultArchetype & arch) const-> 
+            typename std::enable_if<sizeof...(TheRest) != 0, void>::type
          {
-            (void)f;
             arch.mergeSignature(getComponentSignature<First>());
-            fancyAddArchetypeQuery(arch, args...);
-         }
-
-         void fancyGetArchetype(DefaultArchetype & arch)
-         {
-            (void)arch;
-         }
-
-         template <class First, class...TheRest>
-         void fancyGetArchetype(DefaultArchetype & arch, First f, TheRest...args)
-         {
-            (void)f;
-            arch.mergeSignature(getComponentSignature<First>());
-            fancyGetArchetype(arch, args...);
+            fancierGetArchetype<TheRest...>(arch);
          }
 
    };

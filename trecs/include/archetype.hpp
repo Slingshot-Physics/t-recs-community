@@ -62,6 +62,9 @@ namespace trecs
             return (archetypes_[arch.block] & arch.bits) == arch.bits;
          }
 
+         // Returns true if the archetype supports the query archetype, false
+         // otherwise. Archetype A supports B if the intersection of A and B is
+         // A, and if A is non-empty.
          bool supports(const Archetype<BlockCount> & arch) const
          {
             if (empty())
