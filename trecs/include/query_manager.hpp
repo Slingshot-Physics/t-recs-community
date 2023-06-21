@@ -15,21 +15,6 @@ namespace trecs
    {
       public:
 
-         bool tryAddArchetype(const DefaultArchetype & arch)
-         {
-            for (const auto & typed_entities : archetypes_to_entities_)
-            {
-               if (typed_entities.first == arch)
-               {
-                  return false;
-               }
-            }
-
-            archetypes_to_entities_[arch];
-            archetypes_.push_back(arch);
-            return true;
-         }
-
          query_t addArchetypeQuery(const DefaultArchetype & arch)
          {
             if (archetypes_to_entities_.find(arch) == archetypes_to_entities_.end())
@@ -114,20 +99,6 @@ namespace trecs
                }
             }
             return false;
-         }
-
-         auto getArchetypeEntities(
-            const DefaultArchetype & arch
-         ) const -> const std::unordered_set<trecs::uid_t> &
-         {
-            return archetypes_to_entities_.at(arch);
-         }
-
-         auto getArchetypeEntities(
-            const DefaultArchetype & arch
-         ) -> std::unordered_set<trecs::uid_t > &
-         {
-            return archetypes_to_entities_.at(arch);
          }
 
          auto getArchetypeEntities(

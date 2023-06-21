@@ -13,7 +13,7 @@ class SandoSystem : public trecs::System
       void registerComponents(trecs::Allocator & allocator) const
       { }
 
-      void registerQueries(trecs::Allocator & allocator) const
+      void registerQueries(trecs::Allocator & allocator)
       { }
 };
 
@@ -28,7 +28,7 @@ class NandoSystem : public trecs::System
       void registerComponents(trecs::Allocator & allocator) const
       { }
 
-      void registerQueries(trecs::Allocator & allocator) const
+      void registerQueries(trecs::Allocator & allocator)
       { }
 
       virtual ~NandoSystem(void)

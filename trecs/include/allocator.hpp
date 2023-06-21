@@ -196,19 +196,14 @@ namespace trecs
             return systems_.registerSystem<System_T>();
          }
 
-         bool addArchetypeQuery(const DefaultArchetype & arch)
-         {
-            if (arch.empty())
-            {
-               std::cout << "Empty archetype requested for query.\n";
-               return false;
-            }
-
-            return queries_.tryAddArchetype(arch);
-         }
-
+         // Registers an archetype query with T-RECS. Returns a query ID for
+         // the requested archetype. This method is called as:
+         //
+         //    allocator.addArchetypeQuery(int{}, float{}, complicatedType{});
+         //
+         // with as many registered component types as desired.
          template <class...Args>
-         void addArchetypeQuery(Args...args)
+         query_t addArchetypeQuery(Args...args)
          {
             DefaultArchetype arch;
             fancyAddArchetypeQuery(arch, args...);
@@ -216,12 +211,20 @@ namespace trecs
             if (arch.empty())
             {
                std::cout << "Empty archetype requested for query.\n";
-               return;
+               return error_query;
             }
 
-            queries_.tryAddArchetype(arch);
+            return queries_.addArchetypeQuery(arch);
          }
 
+         // Returns an archetype object based on the component types provided.
+         // This method is called as:
+         //
+         //    allocator.getArchetype(int{}, float{}, complicatedType{});
+         //
+         // with as many registered component types as desired. This method is
+         // not used to register archetype queries with T-RECS. To register
+         // archetype queries, see 'addArchetypeQuery'.
          template <class...Args>
          DefaultArchetype getArchetype(Args...args)
          {
@@ -236,14 +239,11 @@ namespace trecs
          //    - Runs the initialize method
          void initializeSystems(void);
 
-         auto getQueryEntities(const DefaultArchetype & query) const -> const std::unordered_set<trecs::uid_t> &
+         // Retrieves an unordered set of entities that match a particular
+         // archetype query.
+         auto getQueryEntities(const query_t arch_query) const -> const std::unordered_set<trecs::uid_t> &
          {
-            if (!queries_.supportsArchetype(query))
-            {
-               return empty_set_;
-            }
-
-            return queries_.getArchetypeEntities(query);
+            return queries_.getArchetypeEntities(arch_query);
          }
 
       private:
@@ -252,7 +252,7 @@ namespace trecs
 
          const std::unordered_set<uid_t> empty_set_;
 
-         DefaultArchetype edge_archetype_;
+         query_t edge_query_;
 
          EntityManager entities_;
 

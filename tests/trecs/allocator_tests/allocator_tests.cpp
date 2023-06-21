@@ -74,12 +74,7 @@ TEST_CASE( "can't add components to inactive entity", "[allocator]")
 
 TEST_CASE( "entities report correct components", "[allocator]")
 {
-   // complicatedType_t<0> comp_a;
-   // comp_a.float_field = 1.f;
-   // comp_a.int_field = 0;
-
    trecs::Allocator allocator;
-   // allocator.registerComponent<complicatedType_t<0> >();
 
    trecs::uid_t entity = allocator.addEntity(12, 37);
 
@@ -93,12 +88,7 @@ TEST_CASE( "entities report correct components", "[allocator]")
 
 TEST_CASE( "edge components are deleted after entities are deleted", "[allocator]")
 {
-   // complicatedType_t<0> comp_a;
-   // comp_a.float_field = 1.f;
-   // comp_a.int_field = 0;
-
    trecs::Allocator allocator;
-   // allocator.registerComponent<complicatedType_t<0> >();
 
    trecs::uid_t entity = allocator.addEntity(12, 37);
 
@@ -118,14 +108,7 @@ TEST_CASE( "edge components are deleted after entities are deleted", "[allocator
 
 TEST_CASE( "changing the entity nodes on an edge component doesn't change entity uid", "[allocator]")
 {
-   // rigidBody_t testBody;
-   // testBody.gravity = Vector3(0.0, 0.0, -9.8);
-   // testBody.inertiaTensor = identityMatrix();
-   // testBody.mass = 1;
-   // testBody.ql2b[0] = 1.f;
-
    trecs::Allocator allocator;
-   // allocator.registerComponent<rigidBody_t>();
 
    trecs::uid_t entity = allocator.addEntity(12, 37);
 
@@ -150,14 +133,7 @@ TEST_CASE( "changing the entity nodes on an edge component doesn't change entity
 
 TEST_CASE( "deleting an entity automatically updates the edges it's connected to", "[allocator]")
 {
-   // rigidBody_t testBody;
-   // testBody.gravity = Vector3(0.0, 0.0, -9.8);
-   // testBody.inertiaTensor = identityMatrix();
-   // testBody.mass = 1;
-   // testBody.ql2b[0] = 1.f;
-
    trecs::Allocator allocator;
-   // allocator.registerComponent<rigidBody_t>();
    allocator.registerComponent<float>();
 
    trecs::uid_t node_id1 = allocator.addEntity();
@@ -212,17 +188,13 @@ TEST_CASE( "the allocator queries get the correct archetypes", "[allocator]" )
    allocator.registerComponent<int>();
    allocator.registerComponent<complicatedType_t<0> >();
 
-   trecs::DefaultArchetype float_arch = allocator.getArchetype(float{});
-   trecs::DefaultArchetype int_arch = allocator.getArchetype(int{});
-   trecs::DefaultArchetype rb_arch = allocator.getArchetype(complicatedType_t<0>{});
+   trecs::query_t float_query = allocator.addArchetypeQuery(float{});
+   trecs::query_t int_query = allocator.addArchetypeQuery(int{});
+   trecs::query_t rb_query = allocator.addArchetypeQuery(complicatedType_t<0>{});
 
-   allocator.addArchetypeQuery(float_arch);
-   allocator.addArchetypeQuery(int_arch);
-   allocator.addArchetypeQuery(rb_arch);
-
-   REQUIRE( allocator.getQueryEntities(float_arch).size() == 0 );
-   REQUIRE( allocator.getQueryEntities(int_arch).size() == 0 );
-   REQUIRE( allocator.getQueryEntities(rb_arch).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(float_query).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(int_query).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(rb_query).size() == 0 );
 }
 
 TEST_CASE( "systems get the correct entities", "[allocator]" )
@@ -235,16 +207,9 @@ TEST_CASE( "systems get the correct entities", "[allocator]" )
    allocator.registerComponent<int>();
    allocator.registerComponent<complicatedType_t<0> >();
 
-   trecs::DefaultArchetype float_arch = allocator.getArchetype(float{});
-   trecs::DefaultArchetype int_arch = allocator.getArchetype(int{});
-   trecs::DefaultArchetype rb_arch = allocator.getArchetype(complicatedType_t<0> {});
-
-   std::cout << "float arch:\n";
-   float_arch.print();
-
-   allocator.addArchetypeQuery(float_arch);
-   allocator.addArchetypeQuery(int_arch);
-   allocator.addArchetypeQuery(rb_arch);
+   trecs::query_t float_query = allocator.addArchetypeQuery(float{});
+   trecs::query_t int_query = allocator.addArchetypeQuery(int{});
+   trecs::query_t rb_query = allocator.addArchetypeQuery(complicatedType_t<0>{});
 
    std::vector<trecs::uid_t> entities;
 
@@ -270,9 +235,9 @@ TEST_CASE( "systems get the correct entities", "[allocator]" )
       allocator.addComponent(entities.back(), rb);
    }
 
-   REQUIRE( allocator.getQueryEntities(float_arch).size() == 23 );
-   REQUIRE( allocator.getQueryEntities(int_arch).size() == 15 );
-   REQUIRE( allocator.getQueryEntities(rb_arch).size() == 9 );
+   REQUIRE( allocator.getQueryEntities(float_query).size() == 23 );
+   REQUIRE( allocator.getQueryEntities(int_query).size() == 15 );
+   REQUIRE( allocator.getQueryEntities(rb_query).size() == 9 );
 }
 
 // Verifies that attempting to add a query for unregistered components doesn't
@@ -281,21 +246,14 @@ TEST_CASE( "variadic query registration for unregistered components", "[allocato
 {
    trecs::Allocator allocator;
 
-   allocator.addArchetypeQuery(
+   trecs::query_t funky_query = allocator.addArchetypeQuery(
       float{},
       int{},
       complicatedType_t<0>{},
       complicatedType_t<1>{}
    );
 
-   trecs::DefaultArchetype arch = allocator.getArchetype(
-      float{},
-      int{},
-      complicatedType_t<0>{},
-      complicatedType_t<1>{}
-   );
-
-   REQUIRE( allocator.getQueryEntities(arch).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(funky_query).size() == 0 );
 }
 
 TEST_CASE( "variadic query registration, component addition, component removal, and query retrieval for registered components", "[allocator]")
@@ -307,7 +265,7 @@ TEST_CASE( "variadic query registration, component addition, component removal, 
    allocator.registerComponent<complicatedType_t<0> >();
    allocator.registerComponent<complicatedType_t<1> >();
 
-   allocator.addArchetypeQuery(
+   trecs::query_t funky_query = allocator.addArchetypeQuery(
       float{},
       int{},
       complicatedType_t<0>{},
@@ -316,27 +274,20 @@ TEST_CASE( "variadic query registration, component addition, component removal, 
 
    trecs::uid_t new_entity = allocator.addEntity();
 
-   trecs::DefaultArchetype arch = allocator.getArchetype(
-      float{},
-      int{},
-      complicatedType_t<0>{},
-      complicatedType_t<1>{}
-   );
-
    allocator.addComponent(new_entity, complicatedType_t<0>{});
-   REQUIRE( allocator.getQueryEntities(arch).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(funky_query).size() == 0 );
 
    allocator.addComponent(new_entity, complicatedType_t<1>{});
-   REQUIRE( allocator.getQueryEntities(arch).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(funky_query).size() == 0 );
 
    allocator.addComponent(new_entity, int{});
-   REQUIRE( allocator.getQueryEntities(arch).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(funky_query).size() == 0 );
 
    allocator.addComponent(new_entity, float{});
-   REQUIRE( allocator.getQueryEntities(arch).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(funky_query).size() == 1 );
 
    allocator.removeComponent<float>(new_entity);
-   REQUIRE( allocator.getQueryEntities(arch).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(funky_query).size() == 0 );
 }
 
 TEST_CASE( "verify that adding and removing components changes query output", "[allocator]" )
@@ -348,72 +299,117 @@ TEST_CASE( "verify that adding and removing components changes query output", "[
    allocator.registerComponent<complicatedType_t<0> >();
    allocator.registerComponent<complicatedType_t<1> >();
 
-   trecs::DefaultArchetype archs[4] = {
+   trecs::query_t queries[4] = {
       (
-         allocator.getArchetype(int{})
+         allocator.addArchetypeQuery(int{})
       ),
       (
-         allocator.getArchetype(int{}, float{})
+         allocator.addArchetypeQuery(int{}, float{})
       ),
       (
-         allocator.getArchetype(
+         allocator.addArchetypeQuery(
             int{}, float{}, complicatedType_t<0>{}
          )
       ),
       (
-         allocator.getArchetype(
+         allocator.addArchetypeQuery(
             int{}, float{}, complicatedType_t<0>{}, complicatedType_t<1>{}
          )
       )
    };
 
-   for (int i = 0; i < 4; ++i)
-   {
-      allocator.addArchetypeQuery(archs[i]);
-   }
-
    trecs::uid_t new_entity = allocator.addEntity();
 
    allocator.addComponent(new_entity, int{});
-   REQUIRE( allocator.getQueryEntities(archs[0]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[1]).size() == 0 );
-   REQUIRE( allocator.getQueryEntities(archs[2]).size() == 0 );
-   REQUIRE( allocator.getQueryEntities(archs[3]).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(queries[0]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[1]).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(queries[2]).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(queries[3]).size() == 0 );
 
    allocator.addComponent(new_entity, float{});
-   REQUIRE( allocator.getQueryEntities(archs[0]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[1]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[2]).size() == 0 );
-   REQUIRE( allocator.getQueryEntities(archs[3]).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(queries[0]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[1]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[2]).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(queries[3]).size() == 0 );
 
    allocator.addComponent(new_entity, complicatedType_t<0>{1, 2.f});
-   REQUIRE( allocator.getQueryEntities(archs[0]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[1]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[2]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[3]).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(queries[0]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[1]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[2]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[3]).size() == 0 );
 
    allocator.addComponent(new_entity, complicatedType_t<1>{});
-   REQUIRE( allocator.getQueryEntities(archs[0]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[1]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[2]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[3]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[0]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[1]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[2]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[3]).size() == 1 );
 
    allocator.removeComponent<float>(new_entity);
-   REQUIRE( allocator.getQueryEntities(archs[0]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[1]).size() == 0 );
-   REQUIRE( allocator.getQueryEntities(archs[2]).size() == 0 );
-   REQUIRE( allocator.getQueryEntities(archs[3]).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(queries[0]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[1]).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(queries[2]).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(queries[3]).size() == 0 );
 
    allocator.addComponent(new_entity, float{});
-   REQUIRE( allocator.getQueryEntities(archs[0]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[1]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[2]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[3]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[0]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[1]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[2]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[3]).size() == 1 );
 
    allocator.removeComponent<complicatedType_t<1> >(new_entity);
-   REQUIRE( allocator.getQueryEntities(archs[0]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[1]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[2]).size() == 1 );
-   REQUIRE( allocator.getQueryEntities(archs[3]).size() == 0 );
+   REQUIRE( allocator.getQueryEntities(queries[0]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[1]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[2]).size() == 1 );
+   REQUIRE( allocator.getQueryEntities(queries[3]).size() == 0 );
+}
 
+TEST_CASE( "verify adding the same archetype query multiple times results in the same query ID", "[allocator]" )
+{
+   trecs::Allocator allocator;
+
+   allocator.registerComponent<int>();
+   allocator.registerComponent<float>();
+   allocator.registerComponent<complicatedType_t<0> >();
+   allocator.registerComponent<complicatedType_t<1> >();
+
+   trecs::query_t queries[4] = {
+      (
+         allocator.addArchetypeQuery(int{})
+      ),
+      (
+         allocator.addArchetypeQuery(int{}, float{})
+      ),
+      (
+         allocator.addArchetypeQuery(
+            int{}, float{}, complicatedType_t<0>{}
+         )
+      ),
+      (
+         allocator.addArchetypeQuery(
+            int{}, float{}, complicatedType_t<0>{}, complicatedType_t<1>{}
+         )
+      )
+   };
+
+   trecs::query_t query_a = allocator.addArchetypeQuery(
+      int{}, float{}
+   );
+
+   trecs::query_t query_b = allocator.addArchetypeQuery(
+      int{}, float{}
+   );
+
+   trecs::query_t query_c = allocator.addArchetypeQuery(
+      int{}, complicatedType_t<0>{}, float{}
+   );
+
+   trecs::query_t query_d = allocator.addArchetypeQuery(
+      int{}, complicatedType_t<0>{}, float{}
+   );
+
+   REQUIRE( query_a == query_b );
+
+   REQUIRE( query_c == query_d );
+
+   REQUIRE( query_a != query_d );
 }

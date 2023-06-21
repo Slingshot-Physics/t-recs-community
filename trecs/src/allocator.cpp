@@ -9,8 +9,7 @@ namespace trecs
       , components_(max_num_entities_)
    {
       registerComponent<trecs::edge_t>();
-      edge_archetype_.mergeSignature(getComponentSignature<trecs::edge_t>());
-      queries_.tryAddArchetype(edge_archetype_);
+      edge_query_ = addArchetypeQuery(trecs::edge_t{});
    }
 
    Allocator::Allocator(unsigned int max_num_entities)
@@ -19,8 +18,7 @@ namespace trecs
       , components_(max_num_entities_)
    {
       registerComponent<trecs::edge_t>();
-      edge_archetype_.mergeSignature(getComponentSignature<trecs::edge_t>());
-      queries_.tryAddArchetype(edge_archetype_);
+      edge_query_ = addArchetypeQuery(trecs::edge_t{});
    }
 
    void Allocator::clear(void)
@@ -129,7 +127,7 @@ namespace trecs
    void Allocator::removeNodeEntityFromEdge(uid_t entity_uid)
    {
       auto edges = getComponents<trecs::edge_t>();
-      const auto & edge_entities = getQueryEntities(edge_archetype_);
+      const auto & edge_entities = getQueryEntities(edge_query_);
 
       for (auto & entity : edge_entities)
       {

@@ -23,7 +23,7 @@ namespace trecs
          // Registers an archetype query with the allocator. The allocator will
          // track the entities that satisfy this query, and the system can
          // retrieve the entities associated with this query later.
-         virtual void registerQueries(trecs::Allocator & allocator) const = 0;
+         virtual void registerQueries(trecs::Allocator & allocator) = 0;
 
          // Performs any non-const initialization of the system class.
          // Optionally initializes components or adds entities.
