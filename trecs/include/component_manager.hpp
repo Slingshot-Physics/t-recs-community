@@ -117,6 +117,19 @@ namespace trecs
 
          size_t getNumSignatures(void) const;
 
+         template <typename Component_T>
+         std::vector<uid_t> getComponentEntities(void)
+         {
+            const auto derived_pool = retrievePoolByType<Component_T>();
+            if (derived_pool == nullptr)
+            {
+               std::cout << "Couldn't find component pool\n";
+               return std::vector<uid_t>();
+            }
+
+            return derived_pool->getUids();
+         }
+
       private:
 
          size_t max_size_;

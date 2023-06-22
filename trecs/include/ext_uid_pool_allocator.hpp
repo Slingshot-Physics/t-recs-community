@@ -162,7 +162,7 @@ namespace trecs
 
          // Using this method is not recommended because it's slow. But it's
          // good for tests.
-         std::vector<uid_t> getUids(void)
+         std::vector<uid_t> getUids(void) const
          {
             std::vector<uid_t> uids;
             for (const auto uid_to_index: uid_to_index_)

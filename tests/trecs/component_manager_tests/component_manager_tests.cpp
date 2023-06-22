@@ -8,6 +8,7 @@
 
 #include "catch.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <iostream>
 #include <vector>
@@ -104,14 +105,6 @@ TEST_CASE( "deletion of multiple components", "[ComponentManager]" )
    cman.registerComponent<complicatedType_t<1> >();
    cman.registerComponent<complicatedType_t<2> >();
    cman.registerComponent<complicatedType_t<3> >();
-   // cman.registerComponent<fzx::types::collider_t>();
-   // cman.registerComponent<geometry::types::shape_t>();
-   // cman.registerComponent<geometry::types::aabb_t>();
-
-   // fzx::types::rigidBody_t temp_body;
-   // fzx::types::collider_t temp_collider;
-   // geometry::types::shape_t temp_shape;
-   // geometry::types::aabb_t temp_aabb;
 
    complicatedType_t<0> component_a;
    complicatedType_t<1> component_b;
@@ -363,6 +356,185 @@ TEST_CASE( "insert all types at varying capacities and delete them all", "[Compo
 
       ++num_loops;
    }
+}
+
+TEST_CASE( "get UIDs from unregistered component type", "[ComponentManager]" )
+{
+   trecs::ComponentManager cman(120);
+   cman.registerComponent<complicatedType_t<26> >();
+   cman.registerComponent<complicatedType_t<34> >();
+   cman.registerComponent<float>();
+   cman.registerComponent<int>();
+
+   REQUIRE( cman.getComponentEntities<double>().size() == 0 );
+}
+
+TEST_CASE( "correct UIDs are retrieved from component types", "[ComponentManager]" )
+{
+   trecs::ComponentManager cman(120);
+   cman.registerComponent<complicatedType_t<26> >();
+   cman.registerComponent<complicatedType_t<34> >();
+   cman.registerComponent<float>();
+   cman.registerComponent<int>();
+
+   // Add five int types to unique entities in the component manager.
+   cman.addComponent(0, 2);
+   cman.addComponent(1, 4);
+   cman.addComponent(2, 8);
+   cman.addComponent(3, 16);
+   cman.addComponent(4, 32);
+
+   // Add three float types to unique entities in the component manager.
+   cman.addComponent(1, 4.5f);
+   cman.addComponent(3, -4.5f);
+   cman.addComponent(5, -4.5f);
+
+   // Add seven complicated type <26> types to unique entities.
+   cman.addComponent(33, complicatedType_t<26>{1, -2.f});
+   cman.addComponent(34, complicatedType_t<26>{1, 12.f});
+   cman.addComponent(35, complicatedType_t<26>{2, -4.f});
+   cman.addComponent(36, complicatedType_t<26>{3, 22.f});
+   cman.addComponent(37, complicatedType_t<26>{5, -7.3f});
+   cman.addComponent(38, complicatedType_t<26>{8, -9.f});
+   cman.addComponent(40, complicatedType_t<26>{13, -11.f});
+
+   // These sizes must match up
+   REQUIRE( cman.getComponentEntities<complicatedType_t<34> >().size() == 0 );
+   REQUIRE( cman.getComponentEntities<complicatedType_t<26> >().size() == 7 );
+   REQUIRE( cman.getComponentEntities<int>().size() == 5 );
+   REQUIRE( cman.getComponentEntities<float>().size() == 3 );
+
+   const auto int_entities = cman.getComponentEntities<int>();
+   const auto float_entities = cman.getComponentEntities<float>();
+   const auto ct26_entities = cman.getComponentEntities<complicatedType_t<26> >();
+   const auto ct34_entities = cman.getComponentEntities<complicatedType_t<34> >();
+
+   // Verify that all of the entity UIDs that were used to add int components are found.
+   REQUIRE(
+      (
+         (std::find(int_entities.begin(), int_entities.end(), 0) != int_entities.end()) &&
+         (std::find(int_entities.begin(), int_entities.end(), 1) != int_entities.end()) &&
+         (std::find(int_entities.begin(), int_entities.end(), 2) != int_entities.end()) &&
+         (std::find(int_entities.begin(), int_entities.end(), 3) != int_entities.end()) &&
+         (std::find(int_entities.begin(), int_entities.end(), 4) != int_entities.end())
+      )
+   );
+
+   // Verify that all of the entity UIDs that were used to add float components are found.
+   REQUIRE(
+      (
+         (std::find(float_entities.begin(), float_entities.end(), 1) != float_entities.end()) &&
+         (std::find(float_entities.begin(), float_entities.end(), 3) != float_entities.end()) &&
+         (std::find(float_entities.begin(), float_entities.end(), 5) != float_entities.end())
+      )
+   );
+
+   // Verify that all of the entity UIDs that were used to add ct26 components are found.
+   REQUIRE(
+      (
+         (std::find(ct26_entities.begin(), ct26_entities.end(), 33) != ct26_entities.end()) &&
+         (std::find(ct26_entities.begin(), ct26_entities.end(), 34) != ct26_entities.end()) &&
+         (std::find(ct26_entities.begin(), ct26_entities.end(), 35) != ct26_entities.end()) &&
+         (std::find(ct26_entities.begin(), ct26_entities.end(), 36) != ct26_entities.end()) &&
+         (std::find(ct26_entities.begin(), ct26_entities.end(), 37) != ct26_entities.end()) &&
+         (std::find(ct26_entities.begin(), ct26_entities.end(), 38) != ct26_entities.end()) &&
+         (std::find(ct26_entities.begin(), ct26_entities.end(), 40) != ct26_entities.end())
+      )
+   );
+
+   // Check some negative cases - these entities shouldn't be parts of these components.
+   REQUIRE( (std::find(int_entities.begin(), int_entities.end(), 5) == int_entities.end()) );
+   REQUIRE( (std::find(float_entities.begin(), float_entities.end(), 0) == float_entities.end()) );
+}
+
+TEST_CASE( "correct UIDs are retrieved from component types after addition and deletion", "[ComponentManager]" )
+{
+   trecs::ComponentManager cman(120);
+   cman.registerComponent<complicatedType_t<26> >();
+   cman.registerComponent<complicatedType_t<34> >();
+   cman.registerComponent<float>();
+   cman.registerComponent<int>();
+
+   // Add five int types to unique entities in the component manager.
+   cman.addComponent(0, 2);
+   cman.addComponent(1, 4);
+   cman.addComponent(2, 8);
+   cman.addComponent(3, 16);
+   cman.addComponent(4, 32);
+
+   // Add three float types to unique entities in the component manager.
+   cman.addComponent(1, 4.5f);
+   cman.addComponent(3, -4.5f);
+   cman.addComponent(5, -4.5f);
+
+   // Add seven complicated type <26> types to unique entities.
+   cman.addComponent(33, complicatedType_t<26>{1, -2.f});
+   cman.addComponent(34, complicatedType_t<26>{1, 12.f});
+   cman.addComponent(35, complicatedType_t<26>{2, -4.f});
+   cman.addComponent(36, complicatedType_t<26>{3, 22.f});
+   cman.addComponent(37, complicatedType_t<26>{5, -7.3f});
+   cman.addComponent(38, complicatedType_t<26>{8, -9.f});
+   cman.addComponent(40, complicatedType_t<26>{13, -11.f});
+
+   // These sizes must match up
+   REQUIRE( cman.getComponentEntities<complicatedType_t<34> >().size() == 0 );
+   REQUIRE( cman.getComponentEntities<complicatedType_t<26> >().size() == 7 );
+   REQUIRE( cman.getComponentEntities<int>().size() == 5 );
+   REQUIRE( cman.getComponentEntities<float>().size() == 3 );
+
+   // Remove an int component from a couple entities
+   cman.removeComponent<int>(0);
+   cman.removeComponent<int>(4);
+
+   auto int_entities = cman.getComponentEntities<int>();
+
+   // Verify that deleting the components from the entities removed those entities
+   // from the component's entity list.
+   REQUIRE( (std::find(int_entities.begin(), int_entities.end(), 0) == int_entities.end()) );
+   REQUIRE( (std::find(int_entities.begin(), int_entities.end(), 4) == int_entities.end()) );
+
+   // Verify that the old entities are still in the component's entity list.
+   REQUIRE(
+      (
+         (std::find(int_entities.begin(), int_entities.end(), 1) != int_entities.end()) &&
+         (std::find(int_entities.begin(), int_entities.end(), 2) != int_entities.end()) &&
+         (std::find(int_entities.begin(), int_entities.end(), 3) != int_entities.end())
+      )
+   );
+
+   // Remove the rest of the int components in existence
+   cman.removeComponent<int>(1);
+   cman.removeComponent<int>(2);
+   cman.removeComponent<int>(3);
+
+   int_entities = cman.getComponentEntities<int>();
+
+   REQUIRE( int_entities.size() == 0 );
+
+   // Remove one float component from an entity.
+   cman.removeComponent<float>(3);
+
+   auto float_entities = cman.getComponentEntities<float>();
+
+   // Verify that the entity that had its float component deleted isn't in the
+   // list of entities that have a float component.
+   REQUIRE( std::find(float_entities.begin(), float_entities.end(), 3) == float_entities.end() );
+
+   // Verify that all of the remaining entity UIDs that have float components
+   // are found.
+   REQUIRE(
+      (
+         (std::find(float_entities.begin(), float_entities.end(), 1) != float_entities.end()) &&
+         (std::find(float_entities.begin(), float_entities.end(), 5) != float_entities.end())
+      )
+   );
+
+   cman.removeComponent<complicatedType_t<26> >(38);
+
+   auto ct26_entities = cman.getComponentEntities<complicatedType_t<26> >();
+
+   REQUIRE( ct26_entities.size() == 6 );
+   REQUIRE( std::find(ct26_entities.begin(), ct26_entities.end(), 38) == ct26_entities.end() );
 }
 
 TEST_CASE( "add up to the maximum number of different components", "[ComponentManager]" )
