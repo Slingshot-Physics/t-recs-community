@@ -182,7 +182,7 @@ TEST_CASE( "pool allocator veracity")
    // Verify that components that were deleted are actually deleted.
    for (unsigned int i = 0; i < deleted_uids.size(); ++i)
    {
-      std::deque<trecs::uid_t> uids = alloc_rb.getUids();
+      std::vector<trecs::uid_t> uids = alloc_rb.getUids();
       bool deleted_uid_doesnt_exist = std::find(
          uids.begin(), uids.end(), deleted_uids[i]
       ) == uids.end();

@@ -8,8 +8,8 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
-#include <deque>
 #include <map>
+#include <vector>
 
 #include <iostream>
 
@@ -135,15 +135,11 @@ namespace trecs
             // Find the UID of the component that maps to the last free index
             // in the data array.
             uid_t uid_to_update = 0;
-            for (
-               uid_mp_cit_t uid_mp_it = uid_to_index_.begin();
-               uid_mp_it != uid_to_index_.end();
-               ++uid_mp_it
-            )
+            for (const auto uid_to_index : uid_to_index_)
             {
-               if (uid_mp_it->second == last_free_index_ - index_increment_)
+               if (uid_to_index.second == last_free_index_ - index_increment_)
                {
-                  uid_to_update = uid_mp_it->first;
+                  uid_to_update = uid_to_index.first;
                   break;
                }
             }
@@ -166,15 +162,12 @@ namespace trecs
 
          // Using this method is not recommended because it's slow. But it's
          // good for tests.
-         std::deque<uid_t> getUids(void)
+         std::vector<uid_t> getUids(void)
          {
-            std::deque<uid_t> uids;
-            for (
-               uid_mp_cit_t mp_it = uid_to_index_.begin();
-               mp_it != uid_to_index_.end();
-               ++mp_it)
+            std::vector<uid_t> uids;
+            for (const auto uid_to_index: uid_to_index_)
             {
-               uids.push_back(mp_it->first);
+               uids.push_back(uid_to_index.first);
             }
 
             return uids;
@@ -228,8 +221,6 @@ namespace trecs
 
          // A conversion from UID to index.
          std::map<uid_t, size_t> uid_to_index_;
-
-         typedef std::map<uid_t, size_t>::const_iterator uid_mp_cit_t;
 
          // Given a byte-level index, retrieves the element of the underlying
          // data structure at that index, and casts the pointer to that element

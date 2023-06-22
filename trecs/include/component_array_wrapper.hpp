@@ -42,7 +42,7 @@ namespace trecs
             return component_array_ == nullptr;
          }
 
-         const std::deque<uid_t> getUids(void) const
+         const std::vector<uid_t> getUids(void) const
          {
             return component_array_->getUids();
          }
