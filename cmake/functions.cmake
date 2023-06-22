@@ -11,16 +11,17 @@ function( build_trecs_test target_name sources headers links config_files )
       ${sources}
       ${headers}
    )
-   add_test(NAME ${target} COMMAND ${target})
-   set( test_binary_folder ${CMAKE_BINARY_DIR}/exec_tests )
+   add_test(
+      NAME ${target}
+      COMMAND ${target}
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+   )
 
    set_target_properties(
       ${target}
       PROPERTIES
       # Prompt the compiler/linker about the linker language
       LINKER_LANGUAGE CXX
-      # Throw all of the executable tests into one folder
-      RUNTIME_OUTPUT_DIRECTORY ${test_binary_folder}
    )
    
    target_link_libraries(

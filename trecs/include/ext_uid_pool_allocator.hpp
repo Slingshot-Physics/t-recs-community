@@ -35,13 +35,14 @@ namespace trecs
 
             // Number of bytes between data type globs.
             index_increment_ = (
-               (sizeof(T) / alignment_) * alignment + alignment_ * (sizeof(T) % alignment_ > 0)
+               (sizeof(T) / alignment_) * alignment + alignment_ * ((sizeof(T) % alignment_) > 0)
             );
 
-            max_num_bytes_ = index_increment_ * max_num_elements_;
+            max_num_bytes_ = index_increment_ * (max_num_elements_ + 1);
 
             data_pool_ = new unsigned char[max_num_bytes_];
 
+            // The starting index in the byte buffer for the first component.
             index_offset_ = (
                alignment_ - reinterpret_cast<size_t>(
                   &(data_pool_[0])
@@ -56,16 +57,21 @@ namespace trecs
             }
          }
 
-         virtual ~ExternalUidPoolAllocator(void)
+         ~ExternalUidPoolAllocator(void) override
          {
-            std::memset(data_pool_, 0, max_num_bytes_);
+            delete [] data_pool_;
+            data_pool_ = nullptr;
          }
 
          // Clears out the entire byte array and resets the last free index to
          // the initial byte offset. Deletes all of the data in the allocator.
          void clear(void)
          {
-            std::memset(data_pool_, 0, max_num_bytes_);
+            for (size_t i = 0; i < max_num_bytes_; ++i)
+            {
+               data_pool_[i] = 0;
+            }
+
             last_free_index_ = index_offset_;
             uid_to_index_.clear();
          }

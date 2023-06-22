@@ -22,7 +22,7 @@ concurrency:
 # the output of their predecessors without having to generate artifacts.
 jobs:
 
-  build-release:
+  run-release-tests:
     runs-on: [self-hosted, Windows]
     steps:
       - name: Check git
@@ -52,13 +52,14 @@ jobs:
           mingw32-make -j4
           popd
 
-      # - name: Run ctest
-      #   run: |
-      #     cd build-windows-workflow/build
-      #     ctest -V
+      - name: Run ctest
+        run: |
+          cd build-windows-workflow/build
+          dir
+          ctest -V --output-on-failure
 
-  build-debug:
-    needs: build-release
+  run-debug-tests:
+    needs: run-release-tests
     runs-on: [self-hosted, Windows]
     steps:
       - name: Checkout
@@ -82,7 +83,7 @@ jobs:
           mingw32-make -j4
           popd
 
-      # - name: Run ctest
-      #   run: |
-      #     cd build-windows-workflow/build
-      #     ctest -V
+      - name: Run ctest
+        run: |
+          cd build-windows-workflow/build
+          ctest -V --output-on-failure

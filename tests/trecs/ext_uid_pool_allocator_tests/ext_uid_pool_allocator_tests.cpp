@@ -13,8 +13,11 @@ typedef unsigned int uid_t;
 
 TEST_CASE( "pool allocator interface works" )
 {
+   std::cout << "adding new allocators\n";
    trecs::PoolAllocatorInterface * rb_alloc = new trecs::ExternalUidPoolAllocator<complicatedType_t<0> >(100, 8);
+   std::cout << "added an allocator for the complicated type\n";
    trecs::PoolAllocatorInterface * mesh_alloc = new trecs::ExternalUidPoolAllocator<complicatedType_t<5> >(100, 8);
+   std::cout << "added an allocator for another complicated type\n";
 
    REQUIRE(rb_alloc->size() == 0);
    REQUIRE(mesh_alloc->size() == 0);

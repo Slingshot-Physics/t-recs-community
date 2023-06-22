@@ -48,7 +48,10 @@ namespace trecs
             ) % alignment_;
             last_free_index_ = index_offset_;
 
-            std::memset(data_pool_, 0, max_num_bytes_);
+            for (size_t i = 0; i < max_num_bytes_; ++i)
+            {
+               data_pool_[i] = 0;
+            }
 
             for (uid_t i = 0; i < static_cast<uid_t>(max_num_elements_); ++i)
             {
@@ -56,23 +59,23 @@ namespace trecs
             }
          }
 
-         virtual ~PoolAllocator(void)
+         ~PoolAllocator(void) override
          {
-            if (data_pool_ != nullptr)
-            {
-               delete [] data_pool_;
-               data_pool_ = nullptr;
-            }
+            delete [] data_pool_;
+            data_pool_ = nullptr;
          }
 
          // Zeroes out the underlying data buffer. Clears the current list of
          // UIDs and resets the UID pool to contain all possible UIDs.
          void clear(void)
          {
+            for (size_t i = 0; i < max_num_bytes_; ++i)
+            {
+               data_pool_[i] = 0;
+            }
+
             last_free_index_ = index_offset_;
             uid_to_index_.clear();
-
-            std::memset(data_pool_, 0, max_num_bytes_);
 
             uids_.clear();
             uid_pool_.clear();
