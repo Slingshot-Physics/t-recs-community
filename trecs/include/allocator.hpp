@@ -26,7 +26,7 @@ namespace trecs
 
          void clear(void);
 
-         unsigned int maxEntities(void)
+         unsigned int maxEntities(void) const
          {
             return max_num_entities_;
          }
@@ -150,6 +150,28 @@ namespace trecs
             return components_.getComponent<Component_T>(entity_uid);
          }
 
+         // Attempt to retrieve a component of a particular type from an
+         // entity. Returns nullptr if the requested entity is not active or if
+         // an unsupported component type is used.
+         template <typename Component_T>
+         const Component_T * getComponent(uid_t entity_uid) const
+         {
+            if (!entities_.entityActive(entity_uid))
+            {
+               return nullptr;
+            }
+
+            DefaultArchetype old_arch = entities_.getArchetype(entity_uid);
+            signature_t component_sig = getComponentSignature<Component_T>();
+
+            if (!old_arch.supports(component_sig))
+            {
+               return nullptr;
+            }
+
+            return components_.getComponent<Component_T>(entity_uid);
+         }
+
          template <typename Component_T>
          ComponentArrayWrapper<Component_T> getComponents(void)
          {
@@ -227,7 +249,7 @@ namespace trecs
          // not used to register archetype queries with T-RECS. To register
          // archetype queries, see 'addArchetypeQuery'.
          template <class...Args>
-         DefaultArchetype getArchetype(void)
+         DefaultArchetype getArchetype(void) const
          {
             DefaultArchetype arch;
             fancierGetArchetype<Args...>(arch);
@@ -274,7 +296,7 @@ namespace trecs
          }
 
          template <class First, class...TheRest>
-         auto fancierGetArchetype(DefaultArchetype & arch) const-> 
+         auto fancierGetArchetype(DefaultArchetype & arch) const -> 
             typename std::enable_if<sizeof...(TheRest) != 0, void>::type
          {
             arch.mergeSignature(getComponentSignature<First>());

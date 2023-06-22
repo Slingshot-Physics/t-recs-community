@@ -104,7 +104,13 @@ namespace trecs
          }
 
          template <typename Component_T>
-         size_t getNumComponents(void)
+         const Component_T * getComponent(uid_t component_uid) const
+         {
+            return retrieveComponentByUid<Component_T>(component_uid);
+         }
+
+         template <typename Component_T>
+         size_t getNumComponents(void) const
          {
             return retrievePoolByType<Component_T>()->size();
          }
@@ -118,7 +124,7 @@ namespace trecs
          size_t getNumSignatures(void) const;
 
          template <typename Component_T>
-         std::vector<uid_t> getComponentEntities(void)
+         std::vector<uid_t> getComponentEntities(void) const
          {
             const auto derived_pool = retrievePoolByType<Component_T>();
             if (derived_pool == nullptr)
@@ -154,7 +160,45 @@ namespace trecs
          }
 
          template <typename Component_T>
+         const Component_T * retrieveComponentByUid(uid_t component_uid) const
+         {
+            ExternalUidPoolAllocator<Component_T> * pool_derived = \
+               retrievePoolByType<Component_T>();
+
+            if (pool_derived == nullptr)
+            {
+               return nullptr;
+            }
+
+            return pool_derived->getComponent(component_uid);
+         }
+
+         template <typename Component_T>
          ExternalUidPoolAllocator<Component_T> * retrievePoolByType(void)
+         {
+            signature_t signature = getSignature<Component_T>();
+
+            if (signature >= allocators_.size())
+            {
+               std::cout << "Couldn't find pool for signature " << signature << "\n";
+               return nullptr;
+            }
+
+            PoolAllocatorInterface * pool_base = allocators_.at(signature);
+
+            if (pool_base == nullptr)
+            {
+               std::cout << "Pool signature hasn't been created for component signature " << signature << "\n";
+            }
+
+            ExternalUidPoolAllocator<Component_T> * pool_derived = \
+               static_cast<ExternalUidPoolAllocator<Component_T> *>(pool_base);
+
+            return pool_derived;
+         }
+
+         template <typename Component_T>
+         const ExternalUidPoolAllocator<Component_T> * retrievePoolByType(void) const
          {
             signature_t signature = getSignature<Component_T>();
 
