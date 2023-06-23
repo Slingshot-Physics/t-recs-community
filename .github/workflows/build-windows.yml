@@ -21,9 +21,29 @@ concurrency:
 # the container. Specifically ~/actions-runner/_work. Successive jobs can reuse
 # the output of their predecessors without having to generate artifacts.
 jobs:
+  build-release-no-tests:
+    runs-on: [self-hosted, linux]
+    container:
+      image: ${{vars.BUILD_IMAGE}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: build-windows-workflow
+          submodules: true
+
+      - name: Build in release
+        run: |
+          cd build-windows-workflow
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=release -DBUILD_TRECS_TESTS=0 ..
+          make -j4
+          cd ..
 
   run-release-tests:
     runs-on: [self-hosted, Windows]
+    needs: build-release-no-tests
     steps:
       - name: Check git
         run: git --version
@@ -57,6 +77,27 @@ jobs:
           cd build-windows-workflow/build
           dir
           ctest -V --output-on-failure
+
+  build-debug-no-tests:
+    runs-on: [self-hosted, linux]
+    needs: run-release-tests
+    container:
+      image: ${{vars.BUILD_IMAGE}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: build-windows-workflow
+          submodules: true
+
+      - name: Build in release
+        run: |
+          cd build-windows-workflow
+          mkdir build
+          cd build
+          cmake -DBUILD_TRECS_TESTS=0 ..
+          make -j4
+          cd ..
 
   run-debug-tests:
     needs: run-release-tests

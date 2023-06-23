@@ -19,8 +19,10 @@ endif()
 
 include( ${CMAKE_SOURCE_DIR}/cmake/functions.cmake )
 
-set( LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}" )
-set( EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}" )
+if ( BUILD_TRECS_TESTS )
+    set( LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}" )
+    set( EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}" )
+endif()
 
 add_subdirectory( trecs )
 
