@@ -5,6 +5,7 @@ set(
     include/component_array_wrapper.hpp
     include/component_manager.hpp
     include/ecs_types.hpp
+    include/entity_component_buffer.hpp
     include/entity_manager.hpp
     include/ext_uid_pool_allocator.hpp
     include/pool_allocator.hpp
@@ -19,6 +20,7 @@ set(
     sources
     src/allocator.cpp
     src/component_manager.cpp
+    src/entity_component_buffer.cpp
     src/entity_manager.cpp
     src/system_manager.cpp
 )

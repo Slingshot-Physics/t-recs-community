@@ -6,6 +6,11 @@ struct complicatedType_t
 {
    int int_field;
    float float_field;
+
+   bool operator==(const complicatedType_t<N> & other) const
+   {
+      return (int_field == other.int_field) && (float_field == other.float_field);
+   }
 };
 
 typedef struct internalType_s

@@ -30,9 +30,8 @@ namespace trecs
          }
 
          // Retrieves a signature for a particular component type if the
-         // component has been registered. Returns a block signature with
-         // zeroes in both fields if the component type has not been
-         // registered.
+         // component has been registered. Returns an error signature if the
+         // component type has not been registered.
          template <typename Component_T>
          Signature_T getSignature(void) const
          {

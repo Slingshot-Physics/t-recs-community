@@ -37,12 +37,6 @@ TEST_CASE("add signatures", "[SignatureManager]")
    auto int_sig = sig_manager.registerComponent<int>();
    auto rigid_body_sig = sig_manager.registerComponent<complicatedType_t<0> >();
 
-   // REQUIRE( float_sig != 0 );
-
-   // REQUIRE( int_sig != 0 );
-
-   // REQUIRE( rigid_body_sig != 0 );
-
    REQUIRE( float_sig != int_sig );
    REQUIRE( int_sig != rigid_body_sig );
    REQUIRE( float_sig != rigid_body_sig );
