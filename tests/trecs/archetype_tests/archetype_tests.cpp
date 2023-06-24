@@ -310,11 +310,9 @@ TEST_CASE( "verify archetype support works", "[Archetype]")
 TEST_CASE( "verify empty method works", "[Archetype]")
 {
    trecs::Archetype<4> a;
-
    REQUIRE( a.empty() );
 
    trecs::Archetype<16> b;
-   
    REQUIRE( b.empty() );
 }
 

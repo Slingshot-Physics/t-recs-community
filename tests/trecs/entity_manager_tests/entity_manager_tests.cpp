@@ -188,3 +188,79 @@ TEST_CASE( "add archetypes to existing entities", "[EntityManager]" )
 
    REQUIRE( em.size() == 0 );
 }
+
+TEST_CASE( "assignment operator", "[EntityManager]" )
+{
+   size_t max_size = 468;
+   trecs::EntityManager em1(max_size);
+   trecs::EntityManager em2(max_size);
+
+   std::vector<trecs::uid_t> entities;
+
+   // Add a bunch of entities with a bunch of non-zero archetypes
+   for (int i = 0; i < 128; ++i)
+   {
+      entities.push_back(em1.addEntity());
+      for (int j = (i / 2); j < 127; j += (2 * ((i % 2) == 0) + ((i % 2) != 0)))
+      {
+         em1.addComponentSignature(entities.back(), j);
+      }
+
+      REQUIRE( !em1.getArchetype(entities.back()).empty() );
+   }
+
+   em2 = em1;
+
+   // Verify that the archetypes of both entity sets in the copied entity
+   // manager have the same archetypes, and that both entity sets are active.
+   for (const auto entity : entities)
+   {
+      REQUIRE( em2.entityActive(entity) );
+      REQUIRE( em1.getArchetype(entity) == em2.getArchetype(entity) );
+   }
+
+   REQUIRE(em1.size() == em2.size());
+
+   // Remove an entity, verify that the two EM's change.
+   em1.removeEntity(entities.back());
+
+   REQUIRE( em1.size() != em2.size() );
+}
+
+TEST_CASE( "assignment operator with empty entity manager", "[EntityManager]" )
+{
+   size_t max_size = 468;
+   trecs::EntityManager em1(max_size);
+   trecs::EntityManager em2(max_size);
+
+   em2 = em1;
+
+   REQUIRE( em1.size() == 0 );
+   REQUIRE( em2.size() == 0 );
+   REQUIRE( em1.size() == em2.size() );
+}
+
+TEST_CASE( "assignment operator with un-archetyped entities", "[EntityManager]" )
+{
+   size_t max_size = 468;
+   trecs::EntityManager em1(max_size);
+   trecs::EntityManager em2(max_size);
+
+   for (int i = 0; i < max_size; ++i)
+   {
+      em1.addEntity();
+   }
+
+   em2 = em1;
+
+   REQUIRE( em1.size() == em2.size() );
+
+   for (const auto entity : em1.getUids())
+   {
+      REQUIRE( em1.entityActive(entity) );
+      REQUIRE( em2.entityActive(entity) );
+
+      REQUIRE( em1.getArchetype(entity).empty() );
+      REQUIRE( em2.getArchetype(entity).empty() );
+   }
+}

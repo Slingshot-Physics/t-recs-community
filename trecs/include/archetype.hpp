@@ -36,6 +36,51 @@ namespace trecs
 
          ~Archetype(void) = default;
 
+         bool operator==(const Archetype<BlockCount> & other) const
+         {
+            for (int i = 0; i < BlockCount; ++i)
+            {
+               if (archetypes_[i] != other.archetypes_[i])
+               {
+                  return false;
+               }
+            }
+
+            return true;
+         }
+
+         bool operator!=(const Archetype<BlockCount> & other) const
+         {
+            return !(*this == other);
+         }
+
+         Archetype & operator=(const Archetype<BlockCount> & other)
+         {
+            for (int i = 0; i < BlockCount; ++i)
+            {
+               archetypes_[i] = other.archetypes_[i];
+            }
+
+            return *this;
+         }
+
+         bool operator<(const Archetype<BlockCount> & other) const
+         {
+            for (int i = BlockCount - 1; i > -1; --i)
+            {
+               if (archetypes_[i] < other.archetypes_[i])
+               {
+                  return true;
+               }
+               else if (archetypes_[i] > other.archetypes_[i])
+               {
+                  return false;
+               }
+            }
+
+            return false;
+         }
+
          void reset(void)
          {
             for (int i = 0; i < BlockCount; ++i)
@@ -105,51 +150,6 @@ namespace trecs
             {
                std::cout << "\t" << archetypes_[i] << "\n";
             }
-         }
-
-         bool operator==(const Archetype<BlockCount> & other) const
-         {
-            for (int i = 0; i < BlockCount; ++i)
-            {
-               if (archetypes_[i] != other.archetypes_[i])
-               {
-                  return false;
-               }
-            }
-
-            return true;
-         }
-
-         bool operator!=(const Archetype<BlockCount> & other) const
-         {
-            return !(*this == other);
-         }
-
-         Archetype & operator=(const Archetype<BlockCount> & other)
-         {
-            for (int i = 0; i < BlockCount; ++i)
-            {
-               archetypes_[i] = other.archetypes_[i];
-            }
-
-            return *this;
-         }
-
-         bool operator<(const Archetype<BlockCount> & other) const
-         {
-            for (int i = BlockCount - 1; i > -1; --i)
-            {
-               if (archetypes_[i] < other.archetypes_[i])
-               {
-                  return true;
-               }
-               else if (archetypes_[i] > other.archetypes_[i])
-               {
-                  return false;
-               }
-            }
-
-            return false;
          }
 
          uint32_t at(const int32_t i) const

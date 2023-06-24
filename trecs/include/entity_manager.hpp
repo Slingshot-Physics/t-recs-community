@@ -21,6 +21,8 @@ namespace trecs
          // Initialize an entity manager with a maximum entity UID.
          EntityManager(uid_t max_entity_uid);
 
+         EntityManager & operator=(const EntityManager & other);
+
          void clear(void);
 
          // Adds an active entity. Returns the entity UID if successful, or

@@ -30,6 +30,21 @@ namespace trecs
       std::cout << "number of possible signatures: " << archetypes_.size() << "\n";
    }
 
+   EntityManager & EntityManager::operator=(const EntityManager & other)
+   {
+      if (this == &other)
+      {
+         return *this;
+      }
+
+      max_entity_uid_ = other.max_entity_uid_;
+      uid_pool_ = other.uid_pool_;
+      uids_ = other.uids_;
+      archetypes_ = other.archetypes_;
+
+      return *this;
+   }
+
    void EntityManager::clear(void)
    {
       uids_.clear();
