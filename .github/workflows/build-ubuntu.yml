@@ -91,7 +91,7 @@ jobs:
 
   run-debug-tests:
     runs-on: [self-hosted, linux]
-    needs: build-release-no-tests
+    needs: build-debug-no-tests
     container:
       image: ${{vars.BUILD_IMAGE}}
     steps:

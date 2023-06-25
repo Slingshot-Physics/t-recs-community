@@ -6,12 +6,13 @@
 
 #include "catch.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <vector>
 
 typedef unsigned int uid_t;
 
-TEST_CASE( "pool allocator interface works" )
+TEST_CASE( "pool allocator interface works", "[ExternalUidPoolAllocator]" )
 {
    std::cout << "adding new allocators\n";
    trecs::PoolAllocatorInterface * rb_alloc = new trecs::ExternalUidPoolAllocator<complicatedType_t<0> >(100, 8);
@@ -32,7 +33,7 @@ TEST_CASE( "pool allocator interface works" )
    delete mesh_alloc;
 }
 
-TEST_CASE( "pool allocator can be instantiated")
+TEST_CASE( "pool allocator can be instantiated", "[ExternalUidPoolAllocator]" )
 {
    trecs::ExternalUidPoolAllocator<float> alloc_float(100, 8);
 
@@ -43,7 +44,7 @@ TEST_CASE( "pool allocator can be instantiated")
    REQUIRE( true );
 }
 
-TEST_CASE( "pool allocator accept additions")
+TEST_CASE( "pool allocator accept additions", "[ExternalUidPoolAllocator]" )
 {
    trecs::ExternalUidPoolAllocator<complicatedType_t<0> > alloc_rb(100, 8);
 
@@ -62,7 +63,7 @@ TEST_CASE( "pool allocator accept additions")
    REQUIRE( ret == (int )id2 );
 }
 
-TEST_CASE( "pool allocator can be modified")
+TEST_CASE( "pool allocator can be modified", "[ExternalUidPoolAllocator]" )
 {
    trecs::ExternalUidPoolAllocator<complicatedType_t<0> > alloc_rb(100, 1);
 
@@ -93,7 +94,7 @@ TEST_CASE( "pool allocator can be modified")
    REQUIRE( alloc_rb.size() == 0 );
 }
 
-TEST_CASE( "pool allocator respects alignment")
+TEST_CASE( "pool allocator respects alignment", "[ExternalUidPoolAllocator]" )
 {
    size_t byte_alignment = 32;
    trecs::ExternalUidPoolAllocator<complicatedType_t<0> > alloc_rb(100, byte_alignment);
@@ -115,7 +116,7 @@ TEST_CASE( "pool allocator respects alignment")
    REQUIRE( ret == (int )id2);
 }
 
-TEST_CASE( "pool allocator size restrictions")
+TEST_CASE( "pool allocator size restrictions", "[ExternalUidPoolAllocator]" )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
@@ -139,7 +140,7 @@ TEST_CASE( "pool allocator size restrictions")
    }
 }
 
-TEST_CASE( "pool allocator veracity")
+TEST_CASE( "pool allocator veracity", "[ExternalUidPoolAllocator]" )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
@@ -241,4 +242,286 @@ TEST_CASE( "pool allocator veracity")
    }
 
    REQUIRE( alloc_rb.size() == 0 );
+}
+
+TEST_CASE( "assignment operator on from empty to non-empty allocator", "[ExternalUidPoolAllocator]" )
+{
+   size_t max_size = 100;
+   size_t byte_alignment = 32;
+   trecs::ExternalUidPoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+
+   trecs::ExternalUidPoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+
+   bigType_t temp_big_type;
+
+   alloc_b.addComponent(1, temp_big_type);
+
+   REQUIRE( alloc_b.size() == 1 );
+
+   alloc_b = alloc;
+
+   REQUIRE( alloc_b.size() == alloc.size() );
+}
+
+TEST_CASE(
+   "assignment operator after only additions to empty allocator",
+   "[ExternalUidPoolAllocator]"
+)
+{
+   size_t max_size = 100;
+   size_t byte_alignment = 32;
+   trecs::ExternalUidPoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+
+   bigType_t temp_big_type;
+
+   std::vector<trecs::uid_t> entities;
+
+   for (int i = 0; i < 100; ++i)
+   {
+      entities.push_back(i);
+   }
+
+   for (const auto entity : entities)
+   {
+      temp_big_type.int_field = entity;
+      temp_big_type.float_field = static_cast<float>(entity) * -3.f;
+      for (int i = 0; i < 18; ++i)
+      {
+         temp_big_type.stuff.things[i] = entity + i;
+      }
+
+      alloc.addComponent(entity, temp_big_type);
+   }
+
+   trecs::ExternalUidPoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+
+   alloc_b = alloc;
+
+   for (const auto entity : entities)
+   {
+      REQUIRE( alloc.getComponent(entity) != nullptr );
+      bigType_t var_a = *alloc.getComponent(entity);
+
+      REQUIRE( alloc_b.getComponent(entity) != nullptr );
+      bigType_t var_b = *alloc_b.getComponent(entity);
+
+      REQUIRE( var_a.int_field == var_b.int_field );
+      REQUIRE( var_a.float_field == var_b.float_field );
+
+      for (int i = 0; i < 18; ++i)
+      {
+         REQUIRE( var_a.stuff.things[i] == var_b.stuff.things[i] );
+      }
+   }
+}
+
+TEST_CASE(
+   "assignment operator after additions and deletions to empty allocator",
+   "[ExternalUidPoolAllocator]"
+)
+{
+   size_t max_size = 100;
+   size_t byte_alignment = 32;
+   trecs::ExternalUidPoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+
+   bigType_t temp_big_type;
+
+   std::vector<trecs::uid_t> entities;
+
+   for (int i = 0; i < 100; ++i)
+   {
+      entities.push_back(i);
+   }
+
+   for (const auto entity : entities)
+   {
+      temp_big_type.int_field = entity;
+      temp_big_type.float_field = static_cast<float>(entity) * -3.f;
+      for (int i = 0; i < 18; ++i)
+      {
+         temp_big_type.stuff.things[i] = entity + i;
+      }
+
+      alloc.addComponent(entity, temp_big_type);
+   }
+
+   std::vector<trecs::uid_t> entities_copy(entities);
+
+   for (int i = 0; i < 100; ++i)
+   {
+      if (i % 5 == 0)
+      {
+         alloc.removeComponent(entities_copy[i]);
+         entities.erase(
+            std::find(entities.begin(), entities.end(), entities_copy[i])
+         );
+      }
+   }
+
+   trecs::ExternalUidPoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+
+   alloc_b = alloc;
+
+   for (const auto entity : entities)
+   {
+      REQUIRE( alloc.getComponent(entity) != nullptr );
+      bigType_t var_a = *alloc.getComponent(entity);
+
+      REQUIRE( alloc_b.getComponent(entity) != nullptr );
+      bigType_t var_b = *alloc_b.getComponent(entity);
+
+      REQUIRE( var_a.int_field == var_b.int_field );
+      REQUIRE( var_a.float_field == var_b.float_field );
+
+      for (int i = 0; i < 18; ++i)
+      {
+         REQUIRE( var_a.stuff.things[i] == var_b.stuff.things[i] );
+      }
+   }
+}
+
+TEST_CASE(
+   "assignment operator after additions and deletions to non-empty allocator",
+   "[ExternalUidPoolAllocator]"
+)
+{
+   size_t max_size = 100;
+   size_t byte_alignment = 32;
+   trecs::ExternalUidPoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+
+   bigType_t temp_big_type;
+
+   std::vector<trecs::uid_t> entities;
+
+   for (int i = 0; i < 100; ++i)
+   {
+      entities.push_back(i);
+   }
+
+   for (const auto entity : entities)
+   {
+      temp_big_type.int_field = entity;
+      temp_big_type.float_field = static_cast<float>(entity) * -3.f;
+      for (int i = 0; i < 18; ++i)
+      {
+         temp_big_type.stuff.things[i] = entity + i;
+      }
+
+      alloc.addComponent(entity, temp_big_type);
+   }
+
+   std::vector<trecs::uid_t> entities_copy(entities);
+
+   for (int i = 0; i < 100; ++i)
+   {
+      if (i % 5 == 0)
+      {
+         alloc.removeComponent(entities_copy[i]);
+         entities.erase(
+            std::find(entities.begin(), entities.end(), entities_copy[i])
+         );
+      }
+   }
+
+   trecs::ExternalUidPoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+
+   for (int i = 0; i < 16; ++i)
+   {
+      temp_big_type.int_field = -2 * i;
+      alloc_b.addComponent(2 * i, temp_big_type);
+   }
+
+   alloc_b = alloc;
+
+   for (const auto entity : entities)
+   {
+      REQUIRE( alloc.getComponent(entity) != nullptr );
+      bigType_t var_a = *alloc.getComponent(entity);
+
+      REQUIRE( alloc_b.getComponent(entity) != nullptr );
+      bigType_t var_b = *alloc_b.getComponent(entity);
+
+      REQUIRE( var_a.int_field == var_b.int_field );
+      REQUIRE( var_a.float_field == var_b.float_field );
+
+      for (int i = 0; i < 18; ++i)
+      {
+         REQUIRE( var_a.stuff.things[i] == var_b.stuff.things[i] );
+      }
+   }
+}
+
+TEST_CASE(
+   "assignment operator after additions and deletions to non-empty allocator via base class",
+   "[ExternalUidPoolAllocator]"
+)
+{
+   size_t max_size = 100;
+   size_t byte_alignment = 32;
+   trecs::ExternalUidPoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+
+   bigType_t temp_big_type;
+
+   std::vector<trecs::uid_t> entities;
+
+   for (int i = 0; i < 100; ++i)
+   {
+      entities.push_back(i);
+   }
+
+   for (const auto entity : entities)
+   {
+      temp_big_type.int_field = entity;
+      temp_big_type.float_field = static_cast<float>(entity) * -3.f;
+      for (int i = 0; i < 18; ++i)
+      {
+         temp_big_type.stuff.things[i] = entity + i;
+      }
+
+      alloc.addComponent(entity, temp_big_type);
+   }
+
+   std::vector<trecs::uid_t> entities_copy(entities);
+
+   for (int i = 0; i < 100; ++i)
+   {
+      if (i % 5 == 0)
+      {
+         alloc.removeComponent(entities_copy[i]);
+         entities.erase(
+            std::find(entities.begin(), entities.end(), entities_copy[i])
+         );
+      }
+   }
+
+   trecs::ExternalUidPoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+
+   for (int i = 0; i < 16; ++i)
+   {
+      temp_big_type.int_field = -2 * i;
+      alloc_b.addComponent(2 * i, temp_big_type);
+   }
+
+   // alloc_b = alloc;
+
+   trecs::PoolAllocatorInterface & alloc_b_base = alloc_b;
+
+   alloc_b_base = alloc;
+
+   for (const auto entity : entities)
+   {
+      REQUIRE( alloc.getComponent(entity) != nullptr );
+      bigType_t var_a = *alloc.getComponent(entity);
+
+      REQUIRE( alloc_b.getComponent(entity) != nullptr );
+      bigType_t var_b = *alloc_b.getComponent(entity);
+
+      REQUIRE( var_a.int_field == var_b.int_field );
+      REQUIRE( var_a.float_field == var_b.float_field );
+
+      for (int i = 0; i < 18; ++i)
+      {
+         REQUIRE( var_a.stuff.things[i] == var_b.stuff.things[i] );
+      }
+   }
 }

@@ -33,34 +33,68 @@ namespace trecs
             assert(max_num_elements_ > 0);
             assert(alignment > 0);
 
-            // Number of bytes between data type globs.
-            index_increment_ = (
-               (sizeof(T) / alignment_) * alignment + alignment_ * ((sizeof(T) % alignment_) > 0)
-            );
-
-            max_num_bytes_ = index_increment_ * (max_num_elements_ + 1);
-
-            data_pool_ = new unsigned char[max_num_bytes_];
-
-            // The starting index in the byte buffer for the first component.
-            index_offset_ = (
-               alignment_ - reinterpret_cast<size_t>(
-                  &(data_pool_[0])
-               ) % alignment_
-            ) % alignment_;
-
-            last_free_index_ = index_offset_;
-
-            for (size_t i = 0; i < max_num_bytes_; ++i)
-            {
-               data_pool_[i] = 0;
-            }
+            initialize();
          }
 
          ~ExternalUidPoolAllocator(void) override
          {
             delete [] data_pool_;
             data_pool_ = nullptr;
+         }
+
+         ExternalUidPoolAllocator<T> & operator=(
+            const ExternalUidPoolAllocator<T> & other
+         )
+         {
+            if (this == &other)
+            {
+               return *this;
+            }
+
+            clear();
+
+            if (data_pool_ != nullptr)
+            {
+               delete [] data_pool_;
+            }
+
+            alignment_ = other.alignment_;
+            max_num_elements_ = other.max_num_elements_;
+
+            initialize();
+
+            for (const auto uid_to_index : other.uid_to_index_)
+            {
+               addComponent(
+                  uid_to_index.first,
+                  *other.getComponentFromIndex(uid_to_index.second)
+               );
+            }
+
+            return *this;
+         }
+
+         PoolAllocatorInterface & operator=(
+            const PoolAllocatorInterface & other
+         ) override
+         {
+            if (this == &other)
+            {
+               return *this;
+            }
+
+            const ExternalUidPoolAllocator<T> * other_derived_ptr = \
+               dynamic_cast<const ExternalUidPoolAllocator<T> *>(&other);
+
+            if (other_derived_ptr == nullptr)
+            {
+               std::cout << "Couldn't downcast base pool class to derived pool class\n";
+               return *this;
+            }
+
+            *this = *other_derived_ptr;
+
+            return *this;
          }
 
          // Clears out the entire byte array and resets the last free index to
@@ -221,6 +255,32 @@ namespace trecs
 
          // A conversion from UID to index.
          std::map<uid_t, size_t> uid_to_index_;
+
+         void initialize(void)
+         {
+            // Number of bytes between data type globs.
+            index_increment_ = (
+               (sizeof(T) / alignment_) * alignment_ + alignment_ * ((sizeof(T) % alignment_) > 0)
+            );
+
+            max_num_bytes_ = index_increment_ * (max_num_elements_ + 1);
+
+            data_pool_ = new unsigned char[max_num_bytes_];
+
+            // The starting index in the byte buffer for the first component.
+            index_offset_ = (
+               alignment_ - reinterpret_cast<size_t>(
+                  &(data_pool_[0])
+               ) % alignment_
+            ) % alignment_;
+
+            last_free_index_ = index_offset_;
+
+            for (size_t i = 0; i < max_num_bytes_; ++i)
+            {
+               data_pool_[i] = 0;
+            }
+         }
 
          // Given a byte-level index, retrieves the element of the underlying
          // data structure at that index, and casts the pointer to that element

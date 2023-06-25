@@ -14,6 +14,8 @@ namespace trecs
          // Virtualized so that child classes' destructors can be called.
          virtual ~PoolAllocatorInterface(void) { };
 
+         virtual PoolAllocatorInterface & operator=(const PoolAllocatorInterface & other) = 0;
+
          virtual void removeComponent(uid_t uid) = 0;
 
          virtual size_t capacity(void) const = 0;
