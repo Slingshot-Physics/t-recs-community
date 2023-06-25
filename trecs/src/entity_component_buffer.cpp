@@ -2,12 +2,6 @@
 
 namespace trecs
 {
-   void EntityComponentBuffer::clear(void)
-   {
-      entities_.clear();
-      components_.clear();
-   }
-
    uid_t EntityComponentBuffer::addEntity(void)
    {
       return entities_.addEntity();

@@ -19,6 +19,21 @@ namespace trecs
             : signature_counter_(0)
          { }
 
+         SignatureManager & operator=(
+            const SignatureManager<Signature_T> & other
+         )
+         {
+            if (this == &other)
+            {
+               return *this;
+            }
+
+            signature_counter_ = other.signature_counter_;
+            id_to_signature_ = other.id_to_signature_;
+
+            return *this;
+         }
+
          // Registers the component's type and assigns it a signature.
          // Returns the component type's signature.
          template <typename Component_T>
@@ -32,6 +47,7 @@ namespace trecs
          // Retrieves a signature for a particular component type if the
          // component has been registered. Returns an error signature if the
          // component type has not been registered.
+         
          template <typename Component_T>
          Signature_T getSignature(void) const
          {

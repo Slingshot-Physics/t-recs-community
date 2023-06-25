@@ -24,8 +24,6 @@ namespace trecs
 
          Allocator(unsigned int max_num_entities);
 
-         void clear(void);
-
          unsigned int maxEntities(void) const
          {
             return max_num_entities_;

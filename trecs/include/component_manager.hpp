@@ -7,6 +7,7 @@
 #include "signature_manager.hpp"
 
 #include <iostream>
+#include <memory>
 #include <vector>
 
 namespace trecs
@@ -21,14 +22,22 @@ namespace trecs
    //    E.g. Entity UID '1' might have a rigid body component and a shape
    //    component. The rigid body component and the shape component would both
    //    have component UID '1'.
+   //
+   // The ComponentManager allocates data but does not automatically free that
+   // data on destruction. 
    class ComponentManager
    {
       public:
          ComponentManager(size_t max_size);
 
-         // Deletes all of the entries in each component pool. Leaves the map
-         // of pool allocator interface pointers intact.
-         void clear(void);
+         ComponentManager & operator=(const ComponentManager & other);
+
+         ComponentManager & operator=(ComponentManager & other);
+ 
+         // Releases the ownership of the pool allocators. This should only be
+         // called if the source object has been assigned to some other
+         // destination object.
+         void release(void);
 
          // Indicates that a component of a particular type can be added to
          // this component manager.
@@ -43,8 +52,9 @@ namespace trecs
                return;
             }
 
-            allocators_[new_sig] = \
-               new ExternalUidPoolAllocator<Component_T>(max_size_, 8);
+            allocators_[new_sig].reset(
+               new ExternalUidPoolAllocator<Component_T>(max_size_, 8)
+            );
          }
 
          template <typename Component_T>
@@ -112,7 +122,13 @@ namespace trecs
          template <typename Component_T>
          size_t getNumComponents(void) const
          {
-            return retrievePoolByType<Component_T>()->size();
+            const auto pool = retrievePoolByType<Component_T>();
+            if (pool == nullptr)
+            {
+               return 0;
+            }
+
+            return pool->size();
          }
 
          template <typename Component_T>
@@ -140,8 +156,8 @@ namespace trecs
 
          size_t max_size_;
 
-         // Think of this as a mapping of integer signature types to allocators.
-         std::vector<PoolAllocatorInterface *> allocators_;
+         // This is a mapping of integer signature types to allocators.
+         std::vector<std::unique_ptr<PoolAllocatorInterface> > allocators_;
 
          SignatureManager<signature_t> signatures_;
 
@@ -180,11 +196,11 @@ namespace trecs
 
             if (signature >= allocators_.size())
             {
-               std::cout << "Couldn't find pool for signature " << signature << "\n";
+               std::cout << "Couldn't find pool for signature " << static_cast<int>(signature) << "\n";
                return nullptr;
             }
 
-            PoolAllocatorInterface * pool_base = allocators_.at(signature);
+            PoolAllocatorInterface * pool_base = allocators_.at(signature).get();
 
             if (pool_base == nullptr)
             {
@@ -208,7 +224,7 @@ namespace trecs
                return nullptr;
             }
 
-            PoolAllocatorInterface * pool_base = allocators_.at(signature);
+            PoolAllocatorInterface * pool_base = allocators_.at(signature).get();
 
             if (pool_base == nullptr)
             {

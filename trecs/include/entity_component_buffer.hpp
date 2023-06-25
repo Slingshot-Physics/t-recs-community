@@ -22,8 +22,6 @@ namespace trecs
             , components_(max_buffer_size_)
          { }
 
-         void clear(void);
-
          uid_t addEntity(void);
 
          void removeEntity(uid_t entity_uid);

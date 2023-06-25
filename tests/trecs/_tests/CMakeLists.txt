@@ -2,6 +2,7 @@ set(
    test_names
    variadic_test
    assignment_overload_test
+   unique_ptr_test
 )
 
 foreach( test_name ${test_names} )

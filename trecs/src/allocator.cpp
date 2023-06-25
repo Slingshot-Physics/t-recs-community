@@ -21,12 +21,6 @@ namespace trecs
       edge_query_ = addArchetypeQuery<trecs::edge_t>();
    }
 
-   void Allocator::clear(void)
-   {
-      entities_.clear();
-      components_.clear();
-   }
-
    uid_t Allocator::addEntity(void)
    {
       return entities_.addEntity();

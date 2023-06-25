@@ -4,8 +4,6 @@
 
 #define CATCH_CONFIG_MAIN
 
-#define CATCH_CONFIG_DISABLE_EXCEPTIONS 0
-
 #include "catch.hpp"
 
 #include <algorithm>
@@ -19,10 +17,26 @@ struct component
    int thing;
 };
 
+void artificial_assignment(
+   trecs::ComponentManager & dest,
+   const trecs::ComponentManager & src
+)
+{
+   dest = src;
+}
+
 // Instantiate the component manager.
 TEST_CASE( "instantiation", "[ComponentManager]" )
 {
    trecs::ComponentManager cman(120);
+}
+
+TEST_CASE( "get num components from zero registrations", "[ComponentManager]" )
+{
+   trecs::ComponentManager cman(120);
+   REQUIRE( cman.getNumComponents<float>() == 0 );
+   REQUIRE( cman.getNumComponents<int>() == 0 );
+   REQUIRE( cman.getNumComponents<complicatedType_t<77> >() == 0 );
 }
 
 // Try to insert an unregistered type into the component manager.
@@ -1055,4 +1069,465 @@ TEST_CASE( "add up to the maximum number of different components", "[ComponentMa
    cman.registerComponent<component<511> >();
 
    REQUIRE( cman.getNumSignatures() == trecs::max_num_signatures );
+}
+
+TEST_CASE( "assignment operator empty to empty", "[ComponentManager]")
+{
+   trecs::ComponentManager cman1(120);
+   trecs::ComponentManager cman2(120);
+
+   cman2 = cman1;
+
+   REQUIRE( cman2.getNumSignatures() == cman1.getNumSignatures() );
+}
+
+TEST_CASE( "assignment operator to empty destination", "[ComponentManager]" )
+{
+   trecs::ComponentManager cman1(120);
+   cman1.registerComponent<complicatedType_t<26> >();
+   cman1.registerComponent<complicatedType_t<34> >();
+   cman1.registerComponent<float>();
+   cman1.registerComponent<int>();
+
+   std::vector<int> its;
+   its.push_back(2);
+   its.push_back(4);
+   its.push_back(8);
+   its.push_back(16);
+   its.push_back(32);
+
+   // Add five int types to unique entities in the component manager.
+   cman1.addComponent(0, its[0]);
+   cman1.addComponent(1, its[1]);
+   cman1.addComponent(2, its[2]);
+   cman1.addComponent(3, its[3]);
+   cman1.addComponent(4, its[4]);
+
+   std::vector<float> fts;
+   fts.push_back(4.5f);
+   fts.push_back(-4.5f);
+   fts.push_back(-4.5f);
+
+   // Add three float types to unique entities in the component manager.
+   cman1.addComponent(1, fts[0]);
+   cman1.addComponent(3, fts[1]);
+   cman1.addComponent(5, fts[2]);
+
+   std::vector<complicatedType_t<26> > cts;
+   cts.push_back(complicatedType_t<26>{1, -2.f});
+   cts.push_back(complicatedType_t<26>{1, 12.f});
+   cts.push_back(complicatedType_t<26>{2, -4.f});
+   cts.push_back(complicatedType_t<26>{3, 22.f});
+   cts.push_back(complicatedType_t<26>{5, -7.3f});
+   cts.push_back(complicatedType_t<26>{8, -9.f});
+   cts.push_back(complicatedType_t<26>{13, -11.f});
+
+   // Add seven complicated type <26> types to unique entities.
+   cman1.addComponent(33, cts[0]);
+   cman1.addComponent(34, cts[1]);
+   cman1.addComponent(35, cts[2]);
+   cman1.addComponent(36, cts[3]);
+   cman1.addComponent(37, cts[4]);
+   cman1.addComponent(38, cts[5]);
+   cman1.addComponent(40, cts[6]);
+
+   trecs::ComponentManager cman2(120);
+
+   // These have to be cached here, because after assignment none of the
+   // allocator-related functionality will work in cman1.
+   auto num_floats = cman1.getNumComponents<float>();
+   auto num_ints = cman1.getNumComponents<int>();
+   auto num_cts = cman1.getNumComponents<complicatedType_t<26> >();
+
+   cman2 = cman1;
+
+   // Check number of signatures
+   REQUIRE( cman2.getNumSignatures() == cman1.getNumSignatures() );
+   
+   // Check number of components
+   REQUIRE( cman2.getNumComponents<float>() == num_floats );
+   REQUIRE( cman2.getNumComponents<int>() == num_ints );
+   REQUIRE( cman2.getNumComponents<complicatedType_t<26> >() == num_cts );
+
+   auto complicated_types = cman2.getComponents<complicatedType_t<26> >();
+
+   REQUIRE( cman2.getSignature<complicatedType_t<26> >() != trecs::error_signature);
+
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(33) != nullptr );
+
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(33)->int_field == cts[0].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(33)->float_field == cts[0].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(34)->int_field == cts[1].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(34)->float_field == cts[1].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(35)->int_field == cts[2].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(35)->float_field == cts[2].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(36)->int_field == cts[3].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(36)->float_field == cts[3].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(37)->int_field == cts[4].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(37)->float_field == cts[4].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(38)->int_field == cts[5].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(38)->float_field == cts[5].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(40)->int_field == cts[6].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(40)->float_field == cts[6].float_field );
+
+   REQUIRE( *cman2.getComponent<float>(1) == fts[0] );
+   REQUIRE( *cman2.getComponent<float>(3) == fts[1] );
+   REQUIRE( *cman2.getComponent<float>(5) == fts[2] );
+
+   REQUIRE( *cman2.getComponent<int>(0) == its[0] );
+   REQUIRE( *cman2.getComponent<int>(1) == its[1] );
+   REQUIRE( *cman2.getComponent<int>(2) == its[2] );
+   REQUIRE( *cman2.getComponent<int>(3) == its[3] );
+   REQUIRE( *cman2.getComponent<int>(4) == its[4] );
+}
+
+TEST_CASE( "assignment operator to non-empty destination", "[ComponentManager]" )
+{
+   trecs::ComponentManager cman1(120);
+   cman1.registerComponent<complicatedType_t<26> >();
+   cman1.registerComponent<complicatedType_t<34> >();
+   cman1.registerComponent<float>();
+   cman1.registerComponent<int>();
+
+   std::vector<int> its;
+   its.push_back(2);
+   its.push_back(4);
+   its.push_back(8);
+   its.push_back(16);
+   its.push_back(32);
+
+   // Add five int types to unique entities in the component manager.
+   cman1.addComponent(0, its[0]);
+   cman1.addComponent(1, its[1]);
+   cman1.addComponent(2, its[2]);
+   cman1.addComponent(3, its[3]);
+   cman1.addComponent(4, its[4]);
+
+   std::vector<float> fts;
+   fts.push_back(4.5f);
+   fts.push_back(-4.5f);
+   fts.push_back(-4.5f);
+
+   // Add three float types to unique entities in the component manager.
+   cman1.addComponent(1, fts[0]);
+   cman1.addComponent(3, fts[1]);
+   cman1.addComponent(5, fts[2]);
+
+   std::vector<complicatedType_t<26> > cts;
+   cts.push_back(complicatedType_t<26>{1, -2.f});
+   cts.push_back(complicatedType_t<26>{1, 12.f});
+   cts.push_back(complicatedType_t<26>{2, -4.f});
+   cts.push_back(complicatedType_t<26>{3, 22.f});
+   cts.push_back(complicatedType_t<26>{5, -7.3f});
+   cts.push_back(complicatedType_t<26>{8, -9.f});
+   cts.push_back(complicatedType_t<26>{13, -11.f});
+
+   // Add seven complicated type <26> types to unique entities.
+   cman1.addComponent(33, cts[0]);
+   cman1.addComponent(34, cts[1]);
+   cman1.addComponent(35, cts[2]);
+   cman1.addComponent(36, cts[3]);
+   cman1.addComponent(37, cts[4]);
+   cman1.addComponent(38, cts[5]);
+   cman1.addComponent(40, cts[6]);
+
+   trecs::ComponentManager cman2(120);
+
+   cman2.registerComponent<double>();
+   cman2.addComponent(0, 4.0);
+   cman2.addComponent(1, -8.0);
+   cman2.addComponent(2, 16.0);
+
+   cman2.registerComponent<unsigned char>();
+   cman2.addComponent(0, 233);
+   cman2.addComponent(1, 4);
+   cman2.addComponent(2, 55);
+
+   // These have to be cached here, because after assignment none of the
+   // allocator-related functionality will work in cman1.
+   auto num_floats = cman1.getNumComponents<float>();
+   auto num_ints = cman1.getNumComponents<int>();
+   auto num_cts = cman1.getNumComponents<complicatedType_t<26> >();
+
+   cman2 = cman1;
+
+   REQUIRE( cman2.getNumComponents<double>() == 0 );
+
+   // Check number of signatures
+   REQUIRE( cman2.getNumSignatures() == cman1.getNumSignatures() );
+   
+   // Check number of components
+   REQUIRE( cman2.getNumComponents<float>() == num_floats );
+   REQUIRE( cman2.getNumComponents<int>() == num_ints );
+   REQUIRE( cman2.getNumComponents<complicatedType_t<26> >() == num_cts );
+
+   auto complicated_types = cman2.getComponents<complicatedType_t<26> >();
+
+   REQUIRE( cman2.getSignature<complicatedType_t<26> >() != trecs::error_signature);
+
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(33) != nullptr );
+
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(33)->int_field == cts[0].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(33)->float_field == cts[0].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(34)->int_field == cts[1].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(34)->float_field == cts[1].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(35)->int_field == cts[2].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(35)->float_field == cts[2].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(36)->int_field == cts[3].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(36)->float_field == cts[3].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(37)->int_field == cts[4].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(37)->float_field == cts[4].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(38)->int_field == cts[5].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(38)->float_field == cts[5].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(40)->int_field == cts[6].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(40)->float_field == cts[6].float_field );
+
+   REQUIRE( *cman2.getComponent<float>(1) == fts[0] );
+   REQUIRE( *cman2.getComponent<float>(3) == fts[1] );
+   REQUIRE( *cman2.getComponent<float>(5) == fts[2] );
+
+   REQUIRE( *cman2.getComponent<int>(0) == its[0] );
+   REQUIRE( *cman2.getComponent<int>(1) == its[1] );
+   REQUIRE( *cman2.getComponent<int>(2) == its[2] );
+   REQUIRE( *cman2.getComponent<int>(3) == its[3] );
+   REQUIRE( *cman2.getComponent<int>(4) == its[4] );
+}
+
+TEST_CASE( "assign empty to non-empty", "[ComponentManager]" )
+{
+   trecs::ComponentManager cman1(120);
+
+   trecs::ComponentManager cman2(120);
+
+   cman2.registerComponent<double>();
+   cman2.addComponent(0, 4.0);
+   cman2.addComponent(1, -8.0);
+   cman2.addComponent(2, 16.0);
+
+   cman2.registerComponent<unsigned char>();
+   cman2.addComponent(0, 233);
+   cman2.addComponent(1, 4);
+   cman2.addComponent(2, 55);
+
+   cman2 = cman1;
+
+   REQUIRE( cman2.getNumSignatures() == 0 );
+   REQUIRE( cman2.getNumComponents<double>() == 0 );
+   REQUIRE( cman2.getNumComponents<unsigned char>() == 0 );
+}
+
+TEST_CASE( "assignment operator from const source to empty destination", "[ComponentManager]" )
+{
+   trecs::ComponentManager cman1(120);
+   cman1.registerComponent<complicatedType_t<26> >();
+   cman1.registerComponent<complicatedType_t<34> >();
+   cman1.registerComponent<float>();
+   cman1.registerComponent<int>();
+
+   std::vector<int> its;
+   its.push_back(2);
+   its.push_back(4);
+   its.push_back(8);
+   its.push_back(16);
+   its.push_back(32);
+
+   // Add five int types to unique entities in the component manager.
+   cman1.addComponent(0, its[0]);
+   cman1.addComponent(1, its[1]);
+   cman1.addComponent(2, its[2]);
+   cman1.addComponent(3, its[3]);
+   cman1.addComponent(4, its[4]);
+
+   std::vector<float> fts;
+   fts.push_back(4.5f);
+   fts.push_back(-4.5f);
+   fts.push_back(-4.5f);
+
+   // Add three float types to unique entities in the component manager.
+   cman1.addComponent(1, fts[0]);
+   cman1.addComponent(3, fts[1]);
+   cman1.addComponent(5, fts[2]);
+
+   std::vector<complicatedType_t<26> > cts;
+   cts.push_back(complicatedType_t<26>{1, -2.f});
+   cts.push_back(complicatedType_t<26>{1, 12.f});
+   cts.push_back(complicatedType_t<26>{2, -4.f});
+   cts.push_back(complicatedType_t<26>{3, 22.f});
+   cts.push_back(complicatedType_t<26>{5, -7.3f});
+   cts.push_back(complicatedType_t<26>{8, -9.f});
+   cts.push_back(complicatedType_t<26>{13, -11.f});
+
+   // Add seven complicated type <26> types to unique entities.
+   cman1.addComponent(33, cts[0]);
+   cman1.addComponent(34, cts[1]);
+   cman1.addComponent(35, cts[2]);
+   cman1.addComponent(36, cts[3]);
+   cman1.addComponent(37, cts[4]);
+   cman1.addComponent(38, cts[5]);
+   cman1.addComponent(40, cts[6]);
+
+   trecs::ComponentManager cman2(120);
+
+   // These have to be cached here, because after assignment none of the
+   // allocator-related functionality will work in cman1.
+   auto num_floats = cman1.getNumComponents<float>();
+   auto num_ints = cman1.getNumComponents<int>();
+   auto num_cts = cman1.getNumComponents<complicatedType_t<26> >();
+
+   // cman2 = cman1;
+   artificial_assignment(cman2, cman1);
+   cman1.release();
+
+   // Check number of signatures
+   REQUIRE( cman2.getNumSignatures() == cman1.getNumSignatures() );
+   
+   // Check number of components
+   REQUIRE( cman2.getNumComponents<float>() == num_floats );
+   REQUIRE( cman2.getNumComponents<int>() == num_ints );
+   REQUIRE( cman2.getNumComponents<complicatedType_t<26> >() == num_cts );
+
+   auto complicated_types = cman2.getComponents<complicatedType_t<26> >();
+
+   REQUIRE( cman2.getSignature<complicatedType_t<26> >() != trecs::error_signature);
+
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(33) != nullptr );
+
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(33)->int_field == cts[0].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(33)->float_field == cts[0].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(34)->int_field == cts[1].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(34)->float_field == cts[1].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(35)->int_field == cts[2].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(35)->float_field == cts[2].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(36)->int_field == cts[3].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(36)->float_field == cts[3].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(37)->int_field == cts[4].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(37)->float_field == cts[4].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(38)->int_field == cts[5].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(38)->float_field == cts[5].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(40)->int_field == cts[6].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(40)->float_field == cts[6].float_field );
+
+   REQUIRE( *cman2.getComponent<float>(1) == fts[0] );
+   REQUIRE( *cman2.getComponent<float>(3) == fts[1] );
+   REQUIRE( *cman2.getComponent<float>(5) == fts[2] );
+
+   REQUIRE( *cman2.getComponent<int>(0) == its[0] );
+   REQUIRE( *cman2.getComponent<int>(1) == its[1] );
+   REQUIRE( *cman2.getComponent<int>(2) == its[2] );
+   REQUIRE( *cman2.getComponent<int>(3) == its[3] );
+   REQUIRE( *cman2.getComponent<int>(4) == its[4] );
+}
+
+TEST_CASE( "assignment operator from const source to non-empty destination", "[ComponentManager]" )
+{
+   trecs::ComponentManager cman1(120);
+   cman1.registerComponent<complicatedType_t<26> >();
+   cman1.registerComponent<complicatedType_t<34> >();
+   cman1.registerComponent<float>();
+   cman1.registerComponent<int>();
+
+   std::vector<int> its;
+   its.push_back(2);
+   its.push_back(4);
+   its.push_back(8);
+   its.push_back(16);
+   its.push_back(32);
+
+   // Add five int types to unique entities in the component manager.
+   cman1.addComponent(0, its[0]);
+   cman1.addComponent(1, its[1]);
+   cman1.addComponent(2, its[2]);
+   cman1.addComponent(3, its[3]);
+   cman1.addComponent(4, its[4]);
+
+   std::vector<float> fts;
+   fts.push_back(4.5f);
+   fts.push_back(-4.5f);
+   fts.push_back(-4.5f);
+
+   // Add three float types to unique entities in the component manager.
+   cman1.addComponent(1, fts[0]);
+   cman1.addComponent(3, fts[1]);
+   cman1.addComponent(5, fts[2]);
+
+   std::vector<complicatedType_t<26> > cts;
+   cts.push_back(complicatedType_t<26>{1, -2.f});
+   cts.push_back(complicatedType_t<26>{1, 12.f});
+   cts.push_back(complicatedType_t<26>{2, -4.f});
+   cts.push_back(complicatedType_t<26>{3, 22.f});
+   cts.push_back(complicatedType_t<26>{5, -7.3f});
+   cts.push_back(complicatedType_t<26>{8, -9.f});
+   cts.push_back(complicatedType_t<26>{13, -11.f});
+
+   // Add seven complicated type <26> types to unique entities.
+   cman1.addComponent(33, cts[0]);
+   cman1.addComponent(34, cts[1]);
+   cman1.addComponent(35, cts[2]);
+   cman1.addComponent(36, cts[3]);
+   cman1.addComponent(37, cts[4]);
+   cman1.addComponent(38, cts[5]);
+   cman1.addComponent(40, cts[6]);
+
+   trecs::ComponentManager cman2(120);
+
+   cman2.registerComponent<double>();
+   cman2.addComponent(0, 4.0);
+   cman2.addComponent(1, -8.0);
+   cman2.addComponent(2, 16.0);
+
+   cman2.registerComponent<unsigned char>();
+   cman2.addComponent(0, 233);
+   cman2.addComponent(1, 4);
+   cman2.addComponent(2, 55);
+
+   // These have to be cached here, because after assignment none of the
+   // allocator-related functionality will work in cman1.
+   auto num_floats = cman1.getNumComponents<float>();
+   auto num_ints = cman1.getNumComponents<int>();
+   auto num_cts = cman1.getNumComponents<complicatedType_t<26> >();
+
+   // cman2 = cman1;
+   artificial_assignment(cman2, cman1);
+   cman1.release();
+
+   REQUIRE( cman2.getNumComponents<double>() == 0 );
+
+   // Check number of signatures
+   REQUIRE( cman2.getNumSignatures() == cman1.getNumSignatures() );
+   
+   // Check number of components
+   REQUIRE( cman2.getNumComponents<float>() == num_floats );
+   REQUIRE( cman2.getNumComponents<int>() == num_ints );
+   REQUIRE( cman2.getNumComponents<complicatedType_t<26> >() == num_cts );
+
+   auto complicated_types = cman2.getComponents<complicatedType_t<26> >();
+
+   REQUIRE( cman2.getSignature<complicatedType_t<26> >() != trecs::error_signature);
+
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(33) != nullptr );
+
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(33)->int_field == cts[0].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(33)->float_field == cts[0].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(34)->int_field == cts[1].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(34)->float_field == cts[1].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(35)->int_field == cts[2].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(35)->float_field == cts[2].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(36)->int_field == cts[3].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(36)->float_field == cts[3].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(37)->int_field == cts[4].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(37)->float_field == cts[4].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(38)->int_field == cts[5].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(38)->float_field == cts[5].float_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(40)->int_field == cts[6].int_field );
+   REQUIRE( cman2.getComponent<complicatedType_t<26> >(40)->float_field == cts[6].float_field );
+
+   REQUIRE( *cman2.getComponent<float>(1) == fts[0] );
+   REQUIRE( *cman2.getComponent<float>(3) == fts[1] );
+   REQUIRE( *cman2.getComponent<float>(5) == fts[2] );
+
+   REQUIRE( *cman2.getComponent<int>(0) == its[0] );
+   REQUIRE( *cman2.getComponent<int>(1) == its[1] );
+   REQUIRE( *cman2.getComponent<int>(2) == its[2] );
+   REQUIRE( *cman2.getComponent<int>(3) == its[3] );
+   REQUIRE( *cman2.getComponent<int>(4) == its[4] );
 }
