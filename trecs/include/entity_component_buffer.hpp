@@ -22,11 +22,25 @@ namespace trecs
             , components_(max_buffer_size_)
          { }
 
+         // Copies the source ECB into this destination ECB without releasing
+         // the source ECB's ownership of its allocators.
+         EntityComponentBuffer & operator=(
+            const EntityComponentBuffer & other
+         );
+
+         // Copies the source ECB into this destination ECB and releases the
+         // source ECB's ownership of its allocators.
+         EntityComponentBuffer & operator=(EntityComponentBuffer & other);
+
          uid_t addEntity(void);
 
          void removeEntity(uid_t entity_uid);
 
          size_t numEntities(void) const;
+
+         size_t numSignatures(void) const;
+
+         void release(void);
 
          // Returns true if a type list is supported by this ECB, false
          // otherwise.

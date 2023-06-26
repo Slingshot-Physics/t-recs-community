@@ -27,7 +27,6 @@ namespace trecs
          if (other.allocators_[i].get() != nullptr)
          {
             allocators_[i].reset(other.allocators_[i].release());
-            std::cout << "other allocator pointer is null? " << (other.allocators_[i].get() == nullptr) << "\n";
          }
       }
 
@@ -55,7 +54,6 @@ namespace trecs
          if (other.allocators_[i].get() != nullptr)
          {
             allocators_[i].reset(other.allocators_[i].get());
-            std::cout << "other allocator pointer is null? " << (other.allocators_[i].get() == nullptr) << "\n";
          }
       }
 

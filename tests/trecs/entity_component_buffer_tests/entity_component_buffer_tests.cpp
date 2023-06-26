@@ -6,7 +6,24 @@
 
 #include "catch.hpp"
 
+#include <map>
 #include <vector>
+
+void artificial_copy_from_const(
+   trecs::EntityComponentBuffer & dest,
+   const trecs::EntityComponentBuffer & src
+)
+{
+   dest = src;
+}
+
+void artificial_copy(
+   trecs::EntityComponentBuffer & dest,
+   trecs::EntityComponentBuffer & src
+)
+{
+   dest = src;
+}
 
 TEST_CASE( "instantiation", "[EntityComponentBuffer]" )
 {
@@ -386,4 +403,327 @@ TEST_CASE( "add more than allocated components, then delete them all", "[EntityC
    REQUIRE( ecb.getComponentEntities<int>().size() == 0);
    REQUIRE( ecb.getComponentEntities<float>().size() == 0);
    REQUIRE( ecb.getComponentEntities<complicatedType_t<0> >().size() == 0);
+}
+
+TEST_CASE( "assignment operator empty to empty", "[EntityComponentBuffer]" )
+{
+   size_t max_size = 256;
+   trecs::EntityComponentBuffer ecb1(max_size);
+   ecb1.registerComponent<complicatedType_t<0> >();
+   ecb1.registerComponent<int>();
+   ecb1.registerComponent<float>();
+
+   trecs::EntityComponentBuffer ecb2(max_size);
+
+   auto num_signatures = ecb1.numSignatures();
+
+   ecb2 = ecb1;
+
+   REQUIRE( ecb2.numSignatures() == ecb1.numSignatures() );
+   REQUIRE( ecb2.numEntities() == ecb1.numEntities() );
+}
+
+TEST_CASE( "assignment operator non-empty to empty", "[EntityComponentBuffer]" )
+{
+   size_t max_size = 256;
+   trecs::EntityComponentBuffer ecb1(max_size);
+   ecb1.registerComponent<complicatedType_t<0> >();
+   ecb1.registerComponent<int>();
+   ecb1.registerComponent<float>();
+
+   std::vector<trecs::uid_t> entities;
+
+   for (int i = 0; i < 100; ++i)
+   {
+      entities.push_back(ecb1.addEntity());
+   }
+
+   std::map<trecs::uid_t, int> entity_ints;
+   std::map<trecs::uid_t, float> entity_floats;
+   std::map<trecs::uid_t, complicatedType_t<0> > entity_cts;
+
+   int i = 0;
+   for (const auto entity : entities)
+   {
+      entity_ints[entity] = ((i % 2) ? -1 : 1) * 3 * i;
+      entity_floats[entity] = ((i % 2) ? 1 : -1) * 5.f * static_cast<float>(i);
+      entity_cts[entity].int_field = i - entities.size() / 2;
+      entity_cts[entity].float_field = ((i % 3) ? 1 : -1) * 4.4f * static_cast<float>(i);
+      ++i;
+   }
+
+   for (const auto entity_int : entity_ints)
+   {
+      ecb1.updateComponent(entity_int.first, entity_int.second);
+   }
+
+   for (const auto entity_float : entity_floats)
+   {
+      ecb1.updateComponent(entity_float.first, entity_float.second);
+   }
+
+   for (const auto entity_ct : entity_cts)
+   {
+      ecb1.updateComponent(entity_ct.first, entity_ct.second);
+   }
+
+   trecs::EntityComponentBuffer ecb2(max_size);
+
+   auto num_signatures = ecb1.numSignatures();
+
+   ecb2 = ecb1;
+
+   REQUIRE( ecb2.numSignatures() == ecb1.numSignatures() );
+   REQUIRE( ecb2.numEntities() == ecb1.numEntities() );
+
+   for (const auto entity_int : entity_ints)
+   {
+      REQUIRE( *ecb2.getComponent<int>(entity_int.first) == entity_int.second );
+   }
+
+   for (const auto entity_float : entity_floats)
+   {
+      REQUIRE( *ecb2.getComponent<float>(entity_float.first) == entity_float.second );
+   }
+
+   for (const auto entity_ct : entity_cts)
+   {
+      REQUIRE( ecb2.getComponent<complicatedType_t<0> >(entity_ct.first)->int_field == entity_ct.second.int_field );
+      REQUIRE( ecb2.getComponent<complicatedType_t<0> >(entity_ct.first)->float_field == entity_ct.second.float_field );
+   }
+
+}
+
+TEST_CASE( "assignment operator non-empty to non-empty", "[EntityComponentBuffer]" )
+{
+   size_t max_size = 256;
+   trecs::EntityComponentBuffer ecb1(max_size);
+   ecb1.registerComponent<complicatedType_t<0> >();
+   ecb1.registerComponent<int>();
+   ecb1.registerComponent<float>();
+
+   std::vector<trecs::uid_t> entities;
+
+   for (int i = 0; i < 100; ++i)
+   {
+      entities.push_back(ecb1.addEntity());
+   }
+
+   std::map<trecs::uid_t, int> entity_ints;
+   std::map<trecs::uid_t, float> entity_floats;
+   std::map<trecs::uid_t, complicatedType_t<0> > entity_cts;
+
+   int i = 0;
+   for (const auto entity : entities)
+   {
+      entity_ints[entity] = ((i % 2) ? -1 : 1) * 3 * i;
+      entity_floats[entity] = ((i % 2) ? 1 : -1) * 5.f * static_cast<float>(i);
+      entity_cts[entity].int_field = i - entities.size() / 2;
+      entity_cts[entity].float_field = ((i % 3) ? 1 : -1) * 4.4f * static_cast<float>(i);
+      ++i;
+   }
+
+   for (const auto entity_int : entity_ints)
+   {
+      ecb1.updateComponent(entity_int.first, entity_int.second);
+   }
+
+   for (const auto entity_float : entity_floats)
+   {
+      ecb1.updateComponent(entity_float.first, entity_float.second);
+   }
+
+   for (const auto entity_ct : entity_cts)
+   {
+      ecb1.updateComponent(entity_ct.first, entity_ct.second);
+   }
+
+   trecs::EntityComponentBuffer ecb2(max_size);
+
+   ecb2.registerComponent<double>();
+   ecb2.registerComponent<unsigned char>();
+
+   ecb2.addEntity();
+   ecb2.updateComponent(ecb2.addEntity(), 2.0);
+   ecb2.updateComponent(ecb2.addEntity(), 77);
+   ecb2.updateComponent(ecb2.addEntity(), -22.0);
+   ecb2.updateComponent(ecb2.addEntity(), 42);
+
+   auto num_signatures = ecb1.numSignatures();
+
+   ecb2 = ecb1;
+
+   REQUIRE( ecb2.numSignatures() == ecb1.numSignatures() );
+   REQUIRE( ecb2.numEntities() == ecb1.numEntities() );
+
+   for (const auto entity_int : entity_ints)
+   {
+      REQUIRE( *ecb2.getComponent<int>(entity_int.first) == entity_int.second );
+   }
+
+   for (const auto entity_float : entity_floats)
+   {
+      REQUIRE( *ecb2.getComponent<float>(entity_float.first) == entity_float.second );
+   }
+
+   for (const auto entity_ct : entity_cts)
+   {
+      REQUIRE( ecb2.getComponent<complicatedType_t<0> >(entity_ct.first)->int_field == entity_ct.second.int_field );
+      REQUIRE( ecb2.getComponent<complicatedType_t<0> >(entity_ct.first)->float_field == entity_ct.second.float_field );
+   }
+
+}
+
+TEST_CASE( "assignment operator const non-empty to non-empty", "[EntityComponentBuffer]" )
+{
+   size_t max_size = 256;
+   trecs::EntityComponentBuffer ecb1(max_size);
+   ecb1.registerComponent<complicatedType_t<0> >();
+   ecb1.registerComponent<int>();
+   ecb1.registerComponent<float>();
+
+   std::vector<trecs::uid_t> entities;
+
+   for (int i = 0; i < 100; ++i)
+   {
+      entities.push_back(ecb1.addEntity());
+   }
+
+   std::map<trecs::uid_t, int> entity_ints;
+   std::map<trecs::uid_t, float> entity_floats;
+   std::map<trecs::uid_t, complicatedType_t<0> > entity_cts;
+
+   int i = 0;
+   for (const auto entity : entities)
+   {
+      entity_ints[entity] = ((i % 2) ? -1 : 1) * 3 * i;
+      entity_floats[entity] = ((i % 2) ? 1 : -1) * 5.f * static_cast<float>(i);
+      entity_cts[entity].int_field = i - entities.size() / 2;
+      entity_cts[entity].float_field = ((i % 3) ? 1 : -1) * 4.4f * static_cast<float>(i);
+      ++i;
+   }
+
+   for (const auto entity_int : entity_ints)
+   {
+      ecb1.updateComponent(entity_int.first, entity_int.second);
+   }
+
+   for (const auto entity_float : entity_floats)
+   {
+      ecb1.updateComponent(entity_float.first, entity_float.second);
+   }
+
+   for (const auto entity_ct : entity_cts)
+   {
+      ecb1.updateComponent(entity_ct.first, entity_ct.second);
+   }
+
+   trecs::EntityComponentBuffer ecb2(max_size);
+
+   ecb2.registerComponent<double>();
+   ecb2.registerComponent<unsigned char>();
+
+   ecb2.addEntity();
+   ecb2.updateComponent(ecb2.addEntity(), 2.0);
+   ecb2.updateComponent(ecb2.addEntity(), 77);
+   ecb2.updateComponent(ecb2.addEntity(), -22.0);
+   ecb2.updateComponent(ecb2.addEntity(), 42);
+
+   auto num_signatures = ecb1.numSignatures();
+
+   artificial_copy_from_const(ecb2, ecb1);
+   ecb1.release();
+
+   REQUIRE( ecb2.numSignatures() == ecb1.numSignatures() );
+   REQUIRE( ecb2.numEntities() == ecb1.numEntities() );
+
+   for (const auto entity_int : entity_ints)
+   {
+      REQUIRE( *ecb2.getComponent<int>(entity_int.first) == entity_int.second );
+   }
+
+   for (const auto entity_float : entity_floats)
+   {
+      REQUIRE( *ecb2.getComponent<float>(entity_float.first) == entity_float.second );
+   }
+
+   for (const auto entity_ct : entity_cts)
+   {
+      REQUIRE( ecb2.getComponent<complicatedType_t<0> >(entity_ct.first)->int_field == entity_ct.second.int_field );
+      REQUIRE( ecb2.getComponent<complicatedType_t<0> >(entity_ct.first)->float_field == entity_ct.second.float_field );
+   }
+
+}
+
+TEST_CASE( "assignment operator const non-empty to empty", "[EntityComponentBuffer]" )
+{
+   size_t max_size = 256;
+   trecs::EntityComponentBuffer ecb1(max_size);
+   ecb1.registerComponent<complicatedType_t<0> >();
+   ecb1.registerComponent<int>();
+   ecb1.registerComponent<float>();
+
+   std::vector<trecs::uid_t> entities;
+
+   for (int i = 0; i < 100; ++i)
+   {
+      entities.push_back(ecb1.addEntity());
+   }
+
+   std::map<trecs::uid_t, int> entity_ints;
+   std::map<trecs::uid_t, float> entity_floats;
+   std::map<trecs::uid_t, complicatedType_t<0> > entity_cts;
+
+   int i = 0;
+   for (const auto entity : entities)
+   {
+      entity_ints[entity] = ((i % 2) ? -1 : 1) * 3 * i;
+      entity_floats[entity] = ((i % 2) ? 1 : -1) * 5.f * static_cast<float>(i);
+      entity_cts[entity].int_field = i - entities.size() / 2;
+      entity_cts[entity].float_field = ((i % 3) ? 1 : -1) * 4.4f * static_cast<float>(i);
+      ++i;
+   }
+
+   for (const auto entity_int : entity_ints)
+   {
+      ecb1.updateComponent(entity_int.first, entity_int.second);
+   }
+
+   for (const auto entity_float : entity_floats)
+   {
+      ecb1.updateComponent(entity_float.first, entity_float.second);
+   }
+
+   for (const auto entity_ct : entity_cts)
+   {
+      ecb1.updateComponent(entity_ct.first, entity_ct.second);
+   }
+
+   trecs::EntityComponentBuffer ecb2(max_size);
+
+   auto num_signatures = ecb1.numSignatures();
+
+   // ecb2 = ecb1;
+   artificial_copy_from_const(ecb2, ecb1);
+   ecb1.release();
+
+   REQUIRE( ecb2.numSignatures() == ecb1.numSignatures() );
+   REQUIRE( ecb2.numEntities() == ecb1.numEntities() );
+
+   for (const auto entity_int : entity_ints)
+   {
+      REQUIRE( *ecb2.getComponent<int>(entity_int.first) == entity_int.second );
+   }
+
+   for (const auto entity_float : entity_floats)
+   {
+      REQUIRE( *ecb2.getComponent<float>(entity_float.first) == entity_float.second );
+   }
+
+   for (const auto entity_ct : entity_cts)
+   {
+      REQUIRE( ecb2.getComponent<complicatedType_t<0> >(entity_ct.first)->int_field == entity_ct.second.int_field );
+      REQUIRE( ecb2.getComponent<complicatedType_t<0> >(entity_ct.first)->float_field == entity_ct.second.float_field );
+   }
+
 }
