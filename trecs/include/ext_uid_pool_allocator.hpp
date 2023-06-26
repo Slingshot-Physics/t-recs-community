@@ -192,6 +192,13 @@ namespace trecs
 
             // Decrement the last free index.
             last_free_index_ -= index_increment_;
+
+            // Zero out the bytes from the component that was moved to the
+            // deleted component's index.
+            for (size_t i = 0; i < index_increment_; ++i)
+            {
+               data_pool_[last_free_index_ + i] = 0;
+            }
          }
 
          // Using this method is not recommended because it's slow. But it's

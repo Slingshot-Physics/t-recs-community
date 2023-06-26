@@ -525,3 +525,46 @@ TEST_CASE(
       }
    }
 }
+
+TEST_CASE( "zero-out deleted bytes", "[ExternalUidPoolAllocator]" )
+{
+   size_t max_size = 100;
+   size_t byte_alignment = 32;
+   trecs::ExternalUidPoolAllocator<byteChecker_t> pooler(max_size, byte_alignment);
+
+   byteChecker_t temp;
+   temp.is_dirty = false;
+   temp.values[0] = -12.f;
+   temp.values[1] = 15.123f;
+   temp.values[2] = -7.5f;
+
+   pooler.addComponent(0, temp);
+   pooler.addComponent(1, temp);
+   pooler.addComponent(2, temp);
+
+   byteChecker_t * weird_copy = pooler.getComponent(2);
+
+   for (int i = 0; i < 3; ++i)
+   {
+      std::cout << weird_copy->values[i] << "\n";
+   }
+
+   bool not_all_bytes_zero = false;
+   for (int i = 0; i < 12; ++i)
+   {
+      if (weird_copy->bytes[i] != 0)
+      {
+         not_all_bytes_zero = true;
+         break;
+      }
+   }
+
+   REQUIRE( not_all_bytes_zero );
+
+   pooler.removeComponent(1);
+
+   for (int i = 0; i < 12; ++i)
+   {
+      REQUIRE( weird_copy->bytes[i] == 0 );
+   }
+}

@@ -26,4 +26,16 @@ typedef struct bigType_s
    internalType_t stuff;
 } bigType_t;
 
+typedef struct byteChecker_s
+{
+   union
+   {
+      float values[3];
+      unsigned char bytes[12];
+   };
+
+   bool is_dirty;
+
+} byteChecker_t;
+
 #endif
