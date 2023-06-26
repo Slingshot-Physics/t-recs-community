@@ -120,7 +120,7 @@ namespace trecs
 
          // Zeroes out the underlying data buffer. Clears the current list of
          // UIDs and resets the UID pool to contain all possible UIDs.
-         void clear(void)
+         void clear(void) override
          {
             for (size_t i = 0; i < max_num_bytes_; ++i)
             {
@@ -176,7 +176,7 @@ namespace trecs
          // Move the last item in the component array to the removed slot.
          // Update the ID map to map the ID of the last-index component to the
          // removed index.
-         void removeComponent(uid_t uid_to_remove)
+         void removeComponent(uid_t uid_to_remove) override
          {
             if (uid_to_index_.find(uid_to_remove) == uid_to_index_.end())
             {
@@ -222,7 +222,7 @@ namespace trecs
          }
 
          // Returns the number of active components in the pool.
-         size_t size(void) const
+         size_t size(void) const override
          {
             return uids_.size();
          }
@@ -235,7 +235,7 @@ namespace trecs
 
          // Returns the maximum number of components that can be held in this
          // allocator.
-         size_t capacity(void) const
+         size_t capacity(void) const override
          {
             return max_num_elements_;
          }

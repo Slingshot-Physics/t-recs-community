@@ -63,7 +63,7 @@ namespace trecs
 
             initialize();
 
-            for (const auto uid_to_index : other.uid_to_index_)
+            for (const auto & uid_to_index : other.uid_to_index_)
             {
                addComponent(
                   uid_to_index.first,
@@ -99,7 +99,7 @@ namespace trecs
 
          // Clears out the entire byte array and resets the last free index to
          // the initial byte offset. Deletes all of the data in the allocator.
-         void clear(void)
+         void clear(void) override
          {
             for (size_t i = 0; i < max_num_bytes_; ++i)
             {
@@ -159,7 +159,7 @@ namespace trecs
          // Move the last item in the component array to the removed slot.
          // Update the ID map to map the ID of the last-index component to the
          // removed index.
-         void removeComponent(uid_t uid_to_remove)
+         void removeComponent(uid_t uid_to_remove) override
          {
             if (uid_to_index_.find(uid_to_remove) == uid_to_index_.end())
             {
@@ -169,7 +169,7 @@ namespace trecs
             // Find the UID of the component that maps to the last free index
             // in the data array.
             uid_t uid_to_update = 0;
-            for (const auto uid_to_index : uid_to_index_)
+            for (const auto & uid_to_index : uid_to_index_)
             {
                if (uid_to_index.second == last_free_index_ - index_increment_)
                {
@@ -208,7 +208,7 @@ namespace trecs
          }
 
          // Returns the number of active components in the pool.
-         size_t size(void) const
+         size_t size(void) const override
          {
             return uid_to_index_.size();
          }
@@ -221,7 +221,7 @@ namespace trecs
 
          // Returns the maximum number of components that can be held in this
          // allocator.
-         size_t capacity(void) const
+         size_t capacity(void) const override
          {
             return max_num_elements_;
          }
