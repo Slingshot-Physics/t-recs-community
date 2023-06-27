@@ -90,7 +90,7 @@ jobs:
           path: build-windows-workflow
           submodules: true
 
-      - name: Build in release
+      - name: Build in debug
         run: |
           cd build-windows-workflow
           mkdir build
@@ -100,7 +100,7 @@ jobs:
           cd ..
 
   run-debug-tests:
-    needs: run-release-tests
+    needs: build-debug-no-tests
     runs-on: [self-hosted, Windows]
     steps:
       - name: Checkout

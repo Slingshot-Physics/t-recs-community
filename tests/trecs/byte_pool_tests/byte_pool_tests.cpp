@@ -1,7 +1,7 @@
 // A series of tests to increase feel-good-ness for the template pool allocator
 // class. This tests all of the core functionality of the pool allocator.
 
-#include "pool_allocator.hpp"
+#include "byte_pool.hpp"
 
 #include "complicated_types.hpp"
 
@@ -11,16 +11,16 @@
 
 #include <vector>
 
-TEST_CASE( "pool allocator interface works", "[PoolAllocator]" )
+TEST_CASE( "pool allocator interface works", "[BytePool]" )
 {
-   trecs::PoolAllocatorInterface * rb_alloc = new trecs::PoolAllocator<complicatedType_t<0> >(100, 8);
-   trecs::PoolAllocatorInterface * mesh_alloc = new trecs::PoolAllocator<bigType_t>(100, 8);
+   trecs::PoolAllocatorInterface * rb_alloc = new trecs::BytePool<complicatedType_t<0> >(100, 8);
+   trecs::PoolAllocatorInterface * mesh_alloc = new trecs::BytePool<bigType_t>(100, 8);
 
    REQUIRE(rb_alloc->size() == 0);
    REQUIRE(mesh_alloc->size() == 0);
 
    complicatedType_t<0> component_a;
-   trecs::PoolAllocator<complicatedType_t<0> > * rb_alloc_dc = static_cast< trecs::PoolAllocator<complicatedType_t<0> > * >(rb_alloc);
+   trecs::BytePool<complicatedType_t<0> > * rb_alloc_dc = static_cast< trecs::BytePool<complicatedType_t<0> > * >(rb_alloc);
    rb_alloc_dc->addComponent(component_a);
 
    REQUIRE(rb_alloc->size() == 1);
@@ -29,20 +29,20 @@ TEST_CASE( "pool allocator interface works", "[PoolAllocator]" )
    delete mesh_alloc;
 }
 
-TEST_CASE( "pool allocator can be instantiated", "[PoolAllocator]" )
+TEST_CASE( "pool allocator can be instantiated", "[BytePool]" )
 {
-   trecs::PoolAllocator<float> alloc_float(100, 8);
+   trecs::BytePool<float> alloc_float(100, 8);
 
-   trecs::PoolAllocator<complicatedType_t<0> > alloc_rb(100, 8);
+   trecs::BytePool<complicatedType_t<0> > alloc_rb(100, 8);
 
    REQUIRE( alloc_rb.capacity() == 100 );
 
    REQUIRE( true );
 }
 
-TEST_CASE( "pool allocator accept additions", "[PoolAllocator]" )
+TEST_CASE( "pool allocator accept additions", "[BytePool]" )
 {
-   trecs::PoolAllocator<complicatedType_t<0> > alloc_rb(100, 8);
+   trecs::BytePool<complicatedType_t<0> > alloc_rb(100, 8);
 
    complicatedType_t<0> component_a;
 
@@ -55,9 +55,9 @@ TEST_CASE( "pool allocator accept additions", "[PoolAllocator]" )
    REQUIRE( alloc_rb.size() == 2 );
 }
 
-TEST_CASE( "pool allocator can be modified", "[PoolAllocator]" )
+TEST_CASE( "pool allocator can be modified", "[BytePool]" )
 {
-   trecs::PoolAllocator<complicatedType_t<0> > alloc_rb(100, 1);
+   trecs::BytePool<complicatedType_t<0> > alloc_rb(100, 1);
 
    complicatedType_t<0> component_a;
 
@@ -82,10 +82,10 @@ TEST_CASE( "pool allocator can be modified", "[PoolAllocator]" )
    REQUIRE( alloc_rb.size() == 0 );
 }
 
-TEST_CASE( "pool allocator respects alignment", "[PoolAllocator]" )
+TEST_CASE( "pool allocator respects alignment", "[BytePool]" )
 {
    size_t byte_alignment = 32;
-   trecs::PoolAllocator<complicatedType_t<0> > alloc_rb(100, byte_alignment);
+   trecs::BytePool<complicatedType_t<0> > alloc_rb(100, byte_alignment);
 
    complicatedType_t<0> component_a;
 
@@ -98,11 +98,11 @@ TEST_CASE( "pool allocator respects alignment", "[PoolAllocator]" )
    REQUIRE( reinterpret_cast<size_t>(&(alloc_rb.getComponent(id2))) % byte_alignment == 0 );
 }
 
-TEST_CASE( "pool allocator size restrictions", "[PoolAllocator]" )
+TEST_CASE( "pool allocator size restrictions", "[BytePool]" )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::PoolAllocator<complicatedType_t<0> > alloc_rb(max_size, byte_alignment);
+   trecs::BytePool<complicatedType_t<0> > alloc_rb(max_size, byte_alignment);
 
    complicatedType_t<0> component_a;
 
@@ -113,13 +113,13 @@ TEST_CASE( "pool allocator size restrictions", "[PoolAllocator]" )
    }
 }
 
-TEST_CASE( "assignment operator on from empty to non-empty allocator", "[PoolAllocator]" )
+TEST_CASE( "assignment operator on from empty to non-empty allocator", "[BytePool]" )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::PoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+   trecs::BytePool<bigType_t> alloc(max_size, byte_alignment);
 
-   trecs::PoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+   trecs::BytePool<bigType_t> alloc_b(max_size, byte_alignment);
 
    bigType_t temp_big_type;
 
@@ -136,12 +136,12 @@ TEST_CASE( "assignment operator on from empty to non-empty allocator", "[PoolAll
 
 TEST_CASE(
    "assignment operator after only additions to empty allocator",
-   "[PoolAllocator]"
+   "[BytePool]"
 )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::PoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+   trecs::BytePool<bigType_t> alloc(max_size, byte_alignment);
 
    bigType_t temp_big_type;
 
@@ -159,7 +159,7 @@ TEST_CASE(
       entities.push_back(alloc.addComponent(temp_big_type));
    }
 
-   trecs::PoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+   trecs::BytePool<bigType_t> alloc_b(max_size, byte_alignment);
 
    alloc_b = alloc;
 
@@ -181,12 +181,12 @@ TEST_CASE(
 
 TEST_CASE(
    "assignment operator after additions and deletions to empty allocator",
-   "[PoolAllocator]"
+   "[BytePool]"
 )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::PoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+   trecs::BytePool<bigType_t> alloc(max_size, byte_alignment);
 
    bigType_t temp_big_type;
 
@@ -217,7 +217,7 @@ TEST_CASE(
       }
    }
 
-   trecs::PoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+   trecs::BytePool<bigType_t> alloc_b(max_size, byte_alignment);
 
    alloc_b = alloc;
 
@@ -253,12 +253,12 @@ TEST_CASE(
 
 TEST_CASE(
    "assignment operator after additions and deletions to non-empty allocator",
-   "[PoolAllocator]"
+   "[BytePool]"
 )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::PoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+   trecs::BytePool<bigType_t> alloc(max_size, byte_alignment);
 
    bigType_t temp_big_type;
 
@@ -289,7 +289,7 @@ TEST_CASE(
       }
    }
 
-   trecs::PoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+   trecs::BytePool<bigType_t> alloc_b(max_size, byte_alignment);
 
    for (int i = 0; i < 16; ++i)
    {
@@ -317,12 +317,12 @@ TEST_CASE(
 
 TEST_CASE(
    "assignment operator after additions and deletions to non-empty allocator via base class",
-   "[PoolAllocator]"
+   "[BytePool]"
 )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::PoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+   trecs::BytePool<bigType_t> alloc(max_size, byte_alignment);
 
    bigType_t temp_big_type;
 
@@ -353,7 +353,7 @@ TEST_CASE(
       }
    }
 
-   trecs::PoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+   trecs::BytePool<bigType_t> alloc_b(max_size, byte_alignment);
 
    for (int i = 0; i < 16; ++i)
    {
@@ -381,11 +381,11 @@ TEST_CASE(
    }
 }
 
-TEST_CASE( "zero-out deleted bytes", "[PoolAllocator]" )
+TEST_CASE( "zero-out deleted bytes", "[BytePool]" )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::PoolAllocator<byteChecker_t> pooler(max_size, byte_alignment);
+   trecs::BytePool<byteChecker_t> pooler(max_size, byte_alignment);
 
    byteChecker_t temp;
    temp.is_dirty = false;

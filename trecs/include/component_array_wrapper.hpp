@@ -1,11 +1,11 @@
 #ifndef COMPONENT_ARRAY_WRAPPER_HEADER
 #define COMPONENT_ARRAY_WRAPPER_HEADER
 
-#include "ext_uid_pool_allocator.hpp"
+#include "ext_uid_byte_pool.hpp"
 
 namespace trecs
 {
-   // This is a simple wrapper around an `ExternalUIDPoolAllocator` class that
+   // This is a simple wrapper around an `ExternalUidBytePool` class that
    // only allows access to getters based on entity UIDs.
    template <typename Component_T>
    class ComponentArrayWrapper
@@ -19,7 +19,7 @@ namespace trecs
             : component_array_(other.component_array_)
          { }
 
-         ComponentArrayWrapper(ExternalUidPoolAllocator<Component_T> * pool)
+         ComponentArrayWrapper(ExternalUidBytePool<Component_T> * pool)
             : component_array_(pool)
          { }
 
@@ -64,7 +64,7 @@ namespace trecs
 
       private:
 
-         ExternalUidPoolAllocator<Component_T> * component_array_;
+         ExternalUidBytePool<Component_T> * component_array_;
 
    };
 }

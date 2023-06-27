@@ -1,6 +1,6 @@
 set(
    target
-   ext_uid_pool_allocator_tests
+   ext_uid_byte_pool_tests
 )
 
 set(

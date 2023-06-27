@@ -5,7 +5,6 @@
 #include "component_manager.hpp"
 #include "ecs_types.hpp"
 #include "entity_manager.hpp"
-#include "pool_allocator.hpp"
 #include "system_manager.hpp"
 #include "query_manager.hpp"
 

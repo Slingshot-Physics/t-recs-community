@@ -2,13 +2,13 @@ set(
     headers
     include/allocator.hpp
     include/archetype.hpp
+    include/byte_pool.hpp
     include/component_array_wrapper.hpp
     include/component_manager.hpp
     include/ecs_types.hpp
     include/entity_component_buffer.hpp
     include/entity_manager.hpp
-    include/ext_uid_pool_allocator.hpp
-    include/pool_allocator.hpp
+    include/ext_uid_byte_pool.hpp
     include/pool_allocator_interface.hpp
     include/query_manager.hpp
     include/signature_manager.hpp

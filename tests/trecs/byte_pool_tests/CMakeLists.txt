@@ -1,6 +1,6 @@
 set(
    target
-   pool_allocator_tests
+   byte_pool_tests
 )
 
 set(

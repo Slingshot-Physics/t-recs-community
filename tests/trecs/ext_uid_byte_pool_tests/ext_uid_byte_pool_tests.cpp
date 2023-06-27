@@ -1,4 +1,4 @@
-#include "ext_uid_pool_allocator.hpp"
+#include "ext_uid_byte_pool.hpp"
 
 #include "complicated_types.hpp"
 
@@ -12,19 +12,19 @@
 
 typedef unsigned int uid_t;
 
-TEST_CASE( "pool allocator interface works", "[ExternalUidPoolAllocator]" )
+TEST_CASE( "pool allocator interface works", "[ExternalUidBytePool]" )
 {
    std::cout << "adding new allocators\n";
-   trecs::PoolAllocatorInterface * rb_alloc = new trecs::ExternalUidPoolAllocator<complicatedType_t<0> >(100, 8);
+   trecs::PoolAllocatorInterface * rb_alloc = new trecs::ExternalUidBytePool<complicatedType_t<0> >(100, 8);
    std::cout << "added an allocator for the complicated type\n";
-   trecs::PoolAllocatorInterface * mesh_alloc = new trecs::ExternalUidPoolAllocator<complicatedType_t<5> >(100, 8);
+   trecs::PoolAllocatorInterface * mesh_alloc = new trecs::ExternalUidBytePool<complicatedType_t<5> >(100, 8);
    std::cout << "added an allocator for another complicated type\n";
 
    REQUIRE(rb_alloc->size() == 0);
    REQUIRE(mesh_alloc->size() == 0);
 
    complicatedType_t<0> component_a;
-   trecs::ExternalUidPoolAllocator<complicatedType_t<0> > * rb_alloc_dc = static_cast< trecs::ExternalUidPoolAllocator<complicatedType_t<0> > * >(rb_alloc);
+   trecs::ExternalUidBytePool<complicatedType_t<0> > * rb_alloc_dc = static_cast< trecs::ExternalUidBytePool<complicatedType_t<0> > * >(rb_alloc);
    rb_alloc_dc->addComponent(15, component_a);
 
    REQUIRE(rb_alloc->size() == 1);
@@ -33,20 +33,20 @@ TEST_CASE( "pool allocator interface works", "[ExternalUidPoolAllocator]" )
    delete mesh_alloc;
 }
 
-TEST_CASE( "pool allocator can be instantiated", "[ExternalUidPoolAllocator]" )
+TEST_CASE( "pool allocator can be instantiated", "[ExternalUidBytePool]" )
 {
-   trecs::ExternalUidPoolAllocator<float> alloc_float(100, 8);
+   trecs::ExternalUidBytePool<float> alloc_float(100, 8);
 
-   trecs::ExternalUidPoolAllocator<complicatedType_t<0> > alloc_rb(100, 8);
+   trecs::ExternalUidBytePool<complicatedType_t<0> > alloc_rb(100, 8);
 
    REQUIRE( alloc_rb.capacity() == 100 );
 
    REQUIRE( true );
 }
 
-TEST_CASE( "pool allocator accept additions", "[ExternalUidPoolAllocator]" )
+TEST_CASE( "pool allocator accept additions", "[ExternalUidBytePool]" )
 {
-   trecs::ExternalUidPoolAllocator<complicatedType_t<0> > alloc_rb(100, 8);
+   trecs::ExternalUidBytePool<complicatedType_t<0> > alloc_rb(100, 8);
 
    complicatedType_t<0> component_a;
 
@@ -63,9 +63,9 @@ TEST_CASE( "pool allocator accept additions", "[ExternalUidPoolAllocator]" )
    REQUIRE( ret == (int )id2 );
 }
 
-TEST_CASE( "pool allocator can be modified", "[ExternalUidPoolAllocator]" )
+TEST_CASE( "pool allocator can be modified", "[ExternalUidBytePool]" )
 {
-   trecs::ExternalUidPoolAllocator<complicatedType_t<0> > alloc_rb(100, 1);
+   trecs::ExternalUidBytePool<complicatedType_t<0> > alloc_rb(100, 1);
 
    complicatedType_t<0> component_a;
 
@@ -94,10 +94,10 @@ TEST_CASE( "pool allocator can be modified", "[ExternalUidPoolAllocator]" )
    REQUIRE( alloc_rb.size() == 0 );
 }
 
-TEST_CASE( "pool allocator respects alignment", "[ExternalUidPoolAllocator]" )
+TEST_CASE( "pool allocator respects alignment", "[ExternalUidBytePool]" )
 {
    size_t byte_alignment = 32;
-   trecs::ExternalUidPoolAllocator<complicatedType_t<0> > alloc_rb(100, byte_alignment);
+   trecs::ExternalUidBytePool<complicatedType_t<0> > alloc_rb(100, byte_alignment);
 
    complicatedType_t<0> component_a;
 
@@ -116,11 +116,11 @@ TEST_CASE( "pool allocator respects alignment", "[ExternalUidPoolAllocator]" )
    REQUIRE( ret == (int )id2);
 }
 
-TEST_CASE( "pool allocator size restrictions", "[ExternalUidPoolAllocator]" )
+TEST_CASE( "pool allocator size restrictions", "[ExternalUidBytePool]" )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::ExternalUidPoolAllocator<complicatedType_t<0> > alloc_rb(max_size, byte_alignment);
+   trecs::ExternalUidBytePool<complicatedType_t<0> > alloc_rb(max_size, byte_alignment);
 
    complicatedType_t<0> component_a;
 
@@ -140,11 +140,11 @@ TEST_CASE( "pool allocator size restrictions", "[ExternalUidPoolAllocator]" )
    }
 }
 
-TEST_CASE( "pool allocator veracity", "[ExternalUidPoolAllocator]" )
+TEST_CASE( "pool allocator veracity", "[ExternalUidBytePool]" )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::ExternalUidPoolAllocator<bigType_t> alloc_rb(max_size, byte_alignment);
+   trecs::ExternalUidBytePool<bigType_t> alloc_rb(max_size, byte_alignment);
 
    bigType_t temp_big_type;
 
@@ -244,13 +244,13 @@ TEST_CASE( "pool allocator veracity", "[ExternalUidPoolAllocator]" )
    REQUIRE( alloc_rb.size() == 0 );
 }
 
-TEST_CASE( "assignment operator on from empty to non-empty allocator", "[ExternalUidPoolAllocator]" )
+TEST_CASE( "assignment operator on from empty to non-empty allocator", "[ExternalUidBytePool]" )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::ExternalUidPoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+   trecs::ExternalUidBytePool<bigType_t> alloc(max_size, byte_alignment);
 
-   trecs::ExternalUidPoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+   trecs::ExternalUidBytePool<bigType_t> alloc_b(max_size, byte_alignment);
 
    bigType_t temp_big_type;
 
@@ -265,12 +265,12 @@ TEST_CASE( "assignment operator on from empty to non-empty allocator", "[Externa
 
 TEST_CASE(
    "assignment operator after only additions to empty allocator",
-   "[ExternalUidPoolAllocator]"
+   "[ExternalUidBytePool]"
 )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::ExternalUidPoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+   trecs::ExternalUidBytePool<bigType_t> alloc(max_size, byte_alignment);
 
    bigType_t temp_big_type;
 
@@ -293,7 +293,7 @@ TEST_CASE(
       alloc.addComponent(entity, temp_big_type);
    }
 
-   trecs::ExternalUidPoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+   trecs::ExternalUidBytePool<bigType_t> alloc_b(max_size, byte_alignment);
 
    alloc_b = alloc;
 
@@ -317,12 +317,12 @@ TEST_CASE(
 
 TEST_CASE(
    "assignment operator after additions and deletions to empty allocator",
-   "[ExternalUidPoolAllocator]"
+   "[ExternalUidBytePool]"
 )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::ExternalUidPoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+   trecs::ExternalUidBytePool<bigType_t> alloc(max_size, byte_alignment);
 
    bigType_t temp_big_type;
 
@@ -358,7 +358,7 @@ TEST_CASE(
       }
    }
 
-   trecs::ExternalUidPoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+   trecs::ExternalUidBytePool<bigType_t> alloc_b(max_size, byte_alignment);
 
    alloc_b = alloc;
 
@@ -382,12 +382,12 @@ TEST_CASE(
 
 TEST_CASE(
    "assignment operator after additions and deletions to non-empty allocator",
-   "[ExternalUidPoolAllocator]"
+   "[ExternalUidBytePool]"
 )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::ExternalUidPoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+   trecs::ExternalUidBytePool<bigType_t> alloc(max_size, byte_alignment);
 
    bigType_t temp_big_type;
 
@@ -423,7 +423,7 @@ TEST_CASE(
       }
    }
 
-   trecs::ExternalUidPoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+   trecs::ExternalUidBytePool<bigType_t> alloc_b(max_size, byte_alignment);
 
    for (int i = 0; i < 16; ++i)
    {
@@ -453,12 +453,12 @@ TEST_CASE(
 
 TEST_CASE(
    "assignment operator after additions and deletions to non-empty allocator via base class",
-   "[ExternalUidPoolAllocator]"
+   "[ExternalUidBytePool]"
 )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::ExternalUidPoolAllocator<bigType_t> alloc(max_size, byte_alignment);
+   trecs::ExternalUidBytePool<bigType_t> alloc(max_size, byte_alignment);
 
    bigType_t temp_big_type;
 
@@ -494,7 +494,7 @@ TEST_CASE(
       }
    }
 
-   trecs::ExternalUidPoolAllocator<bigType_t> alloc_b(max_size, byte_alignment);
+   trecs::ExternalUidBytePool<bigType_t> alloc_b(max_size, byte_alignment);
 
    for (int i = 0; i < 16; ++i)
    {
@@ -526,11 +526,11 @@ TEST_CASE(
    }
 }
 
-TEST_CASE( "zero-out deleted bytes", "[ExternalUidPoolAllocator]" )
+TEST_CASE( "zero-out deleted bytes", "[ExternalUidBytePool]" )
 {
    size_t max_size = 100;
    size_t byte_alignment = 32;
-   trecs::ExternalUidPoolAllocator<byteChecker_t> pooler(max_size, byte_alignment);
+   trecs::ExternalUidBytePool<byteChecker_t> pooler(max_size, byte_alignment);
 
    byteChecker_t temp;
    temp.is_dirty = false;

@@ -1,12 +1,11 @@
-#ifndef EXT_UID_POOL_ALLOCATOR_HEADER
-#define EXT_UID_POOL_ALLOCATOR_HEADER
+#ifndef BYTE_POOL_HEADER
+#define BYTE_POOL_HEADER
 
 #include "pool_allocator_interface.hpp"
 
-#include "ecs_types.hpp"
-
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <cstring>
 #include <map>
 #include <vector>
@@ -21,11 +20,11 @@ namespace trecs
    // and increments according to the alignment requirement and the size of the
    // underlying type.
    template <typename T>
-   class ExternalUidPoolAllocator : public PoolAllocatorInterface
+   class BytePool : public PoolAllocatorInterface
    {
       public:
 
-         ExternalUidPoolAllocator(size_t num_elements, size_t alignment)
+         BytePool(uint64_t num_elements, uint64_t alignment)
             : max_num_elements_(num_elements)
             , alignment_(alignment)
             , data_pool_(nullptr)
@@ -36,39 +35,61 @@ namespace trecs
             initialize();
          }
 
-         ~ExternalUidPoolAllocator(void) override
+         ~BytePool(void) override
          {
             delete [] data_pool_;
             data_pool_ = nullptr;
          }
 
-         ExternalUidPoolAllocator<T> & operator=(
-            const ExternalUidPoolAllocator<T> & other
-         )
+         BytePool<T> & operator=(const BytePool<T> & other)
          {
             if (this == &other)
             {
                return *this;
             }
 
-            clear();
+            uids_.clear();
+            uid_pool_.clear();
+            uid_to_index_.clear();
 
             if (data_pool_ != nullptr)
             {
                delete [] data_pool_;
             }
 
-            alignment_ = other.alignment_;
             max_num_elements_ = other.max_num_elements_;
+            alignment_ = other.alignment_;
 
             initialize();
 
-            for (const auto & uid_to_index : other.uid_to_index_)
+            // All of the components on the other pool allocator are at these
+            // indices in the byte buffer:
+            //
+            //    old_index = old_index_offset + indices_per_element * element_number
+            //
+            // And I want to copy these bytes into my buffer. Each component
+            // will have the same 'element_number' (kind of a count-based-ID)
+            // and 'indices_per_element' (which is the number of bytes per
+            // component). So the new index will be:
+            //
+            //    new_index = new_index_offset + indices_per_element * element_number
+            //
+            // Aaaaand with a little algebra:
+            //
+            //    new_index = old_index - old_index_offset + new_index_offset
+            for (const auto other_uid_to_index : other.uid_to_index_)
             {
-               addComponent(
-                  uid_to_index.first,
-                  *other.getComponentFromIndex(uid_to_index.second)
+               uid_to_index_[other_uid_to_index.first] = (
+                  (other_uid_to_index.second - other.index_offset_) + index_offset_
                );
+            }
+
+            uid_pool_ = other.uid_pool_;
+
+            for (const auto uid_to_index : uid_to_index_)
+            {
+               T & component = getComponentFromIndex(uid_to_index.second);
+               component = other.getComponentFromIndex(other.uid_to_index_.at(uid_to_index.first));
             }
 
             return *this;
@@ -83,8 +104,8 @@ namespace trecs
                return *this;
             }
 
-            const ExternalUidPoolAllocator<T> * other_derived_ptr = \
-               dynamic_cast<const ExternalUidPoolAllocator<T> *>(&other);
+            const BytePool<T> * other_derived_ptr = \
+               dynamic_cast<const BytePool<T> *>(&other);
 
             if (other_derived_ptr == nullptr)
             {
@@ -97,8 +118,8 @@ namespace trecs
             return *this;
          }
 
-         // Clears out the entire byte array and resets the last free index to
-         // the initial byte offset. Deletes all of the data in the allocator.
+         // Zeroes out the underlying data buffer. Clears the current list of
+         // UIDs and resets the UID pool to contain all possible UIDs.
          void clear(void) override
          {
             for (size_t i = 0; i < max_num_bytes_; ++i)
@@ -108,24 +129,32 @@ namespace trecs
 
             last_free_index_ = index_offset_;
             uid_to_index_.clear();
+
+            uids_.clear();
+            uid_pool_.clear();
+
+            for (uid_t i = 0; i < static_cast<uid_t>(max_num_elements_); ++i)
+            {
+               uid_pool_.push_back(i);
+            }
          }
 
-         int addComponent(uid_t new_component_uid, const T & component)
+         uid_t addComponent(const T & component)
          {
-            if (size() >= max_num_elements_)
+            if (size() >= static_cast<size_t>(max_num_elements_))
             {
-               // std::cout << "Too many items added\n";
+               std::cout << "Too many items added\n";
                return -1;
             }
 
-            if (uid_to_index_.find(new_component_uid) != uid_to_index_.end())
-            {
-               std::cout << "Couldn't add UID " << new_component_uid << " because it already exists\n";
-               return -1;
-            }
+            uid_t new_component_uid = uid_pool_.front();
+            assert(uid_to_index_.find(new_component_uid) == uid_to_index_.end());
 
-            T * last_component = getComponentFromIndex(last_free_index_);
-            *last_component = component;
+            T & last_component = getComponentFromIndex(last_free_index_);
+            last_component = component;
+
+            uid_pool_.erase(uid_pool_.begin());
+            uids_.push_back(new_component_uid);
 
             uid_to_index_[new_component_uid] = last_free_index_;
 
@@ -134,26 +163,14 @@ namespace trecs
             return new_component_uid;
          }
 
-         T * getComponent(uid_t uid)
+         T & getComponent(uid_t uid)
          {
-            auto uid_index = uid_to_index_.find(uid);
-            if (uid_index == uid_to_index_.end())
-            {
-               return nullptr;
-            }
-
-            return getComponentFromIndex(uid_index->second);
+            return getComponentFromIndex(uid_to_index_.at(uid));
          }
 
-         const T * getComponent(uid_t uid) const
+         const T & getComponent(uid_t uid) const
          {
-            auto uid_index = uid_to_index_.find(uid);
-            if (uid_index == uid_to_index_.end())
-            {
-               return nullptr;
-            }
-
-            return getComponentFromIndex(uid_index->second);
+            return getComponentFromIndex(uid_to_index_.at(uid));
          }
 
          // Move the last item in the component array to the removed slot.
@@ -169,7 +186,7 @@ namespace trecs
             // Find the UID of the component that maps to the last free index
             // in the data array.
             uid_t uid_to_update = 0;
-            for (const auto & uid_to_index : uid_to_index_)
+            for (const auto uid_to_index : uid_to_index_)
             {
                if (uid_to_index.second == last_free_index_ - index_increment_)
                {
@@ -179,16 +196,20 @@ namespace trecs
             }
 
             // Move last component into the removed component's location.
-            size_t removed_index = uid_to_index_.at(uid_to_remove);
-            T * removed_component = getComponentFromIndex(removed_index);
-            T * last_component = getComponentFromIndex(last_free_index_ - index_increment_);
-            *removed_component = *last_component;
+            size_t removed_index = uid_to_index_[uid_to_remove];
+            T & removed_component = getComponentFromIndex(removed_index);
+            T & last_component = getComponentFromIndex(last_free_index_ - index_increment_);
+            removed_component = last_component;
 
             // Update the index that the last component's UID maps to.
             uid_to_index_[uid_to_update] = removed_index;
 
-            // Remove the UID entry in the UID-index mapping.
+            // Remove the UID entry in the UID-index mapping and add the
+            // removed UID back to the UID pool. Remove the UID entry from the
+            // deque of UIDs that are in use.
             uid_to_index_.erase(uid_to_remove);
+            uid_pool_.push_back(uid_to_remove);
+            uids_.erase(std::find(uids_.begin(), uids_.end(), uid_to_remove));
 
             // Decrement the last free index.
             last_free_index_ -= index_increment_;
@@ -201,29 +222,22 @@ namespace trecs
             }
          }
 
-         // Using this method is not recommended because it's slow. But it's
-         // good for tests.
-         std::vector<uid_t> getUids(void) const
+         // Returns a container of all of the active UIDs in the pool.
+         const std::vector<uid_t> & getUids(void) const
          {
-            std::vector<uid_t> uids;
-            for (const auto uid_to_index: uid_to_index_)
-            {
-               uids.push_back(uid_to_index.first);
-            }
-
-            return uids;
+            return uids_;
          }
 
          // Returns the number of active components in the pool.
          size_t size(void) const override
          {
-            return uid_to_index_.size();
+            return uids_.size();
          }
 
          // Returns the total number of bytes in use by active components.
          size_t sizeBytes(void) const
          {
-            return uid_to_index_.size() * index_increment_;
+            return uids_.size() * index_increment_;
          }
 
          // Returns the maximum number of components that can be held in this
@@ -236,9 +250,10 @@ namespace trecs
       private:
 
          // The maximum number of elements of type T in the data pool.
-         size_t max_num_elements_;
+         int64_t max_num_elements_;
 
-         // Size of the data pool in bytes.
+         // Size of the data pool in bytes. This is equal to the size of the
+         // underlying data structure.
          size_t max_num_bytes_;
 
          // The size of the byte-level alignment of data elements.
@@ -260,6 +275,13 @@ namespace trecs
          // enforced by casting subsets of bytes of this array to the type T.
          unsigned char * data_pool_;
 
+         // The pool of remaining available unique IDs to new elements in this
+         // allocator.
+         std::vector<uid_t> uid_pool_;
+
+         // The UIDs currently being used by elements in this allocator.
+         std::vector<uid_t> uids_;
+
          // A conversion from UID to index.
          std::map<uid_t, size_t> uid_to_index_;
 
@@ -267,14 +289,13 @@ namespace trecs
          {
             // Number of bytes between data type globs.
             index_increment_ = (
-               (sizeof(T) / alignment_) * alignment_ + alignment_ * ((sizeof(T) % alignment_) > 0)
+               (sizeof(T) / alignment_) * alignment_ + alignment_ * (sizeof(T) % alignment_ > 0)
             );
 
             max_num_bytes_ = index_increment_ * (max_num_elements_ + 1);
 
             data_pool_ = new unsigned char[max_num_bytes_];
 
-            // The starting index in the byte buffer for the first component.
             index_offset_ = (
                alignment_ - reinterpret_cast<size_t>(
                   &(data_pool_[0])
@@ -287,40 +308,44 @@ namespace trecs
             {
                data_pool_[i] = 0;
             }
+
+            for (uid_t i = 0; i < static_cast<uid_t>(max_num_elements_); ++i)
+            {
+               uid_pool_.push_back(i);
+            }
          }
 
          // Given a byte-level index, retrieves the element of the underlying
          // data structure at that index, and casts the pointer to that element
          // to a pointer to the desired type.
-         T * getComponentFromIndex(size_t index)
+         T & getComponentFromIndex(size_t index)
          {
             // Just in case something terrible has happened in the
             // implementation....
             assert((index - index_offset_) % alignment_ == 0);
 
             T * component = reinterpret_cast<T * >(&data_pool_[index]);
-            return component;
+            return *component;
          }
 
-         // Given a byte-level index, retrieves the element of the underlying
-         // data structure at that index, and casts the pointer to that element
-         // to a pointer to the desired type.
-         const T * getComponentFromIndex(size_t index) const
+         const T & getComponentFromIndex(size_t index) const
          {
             // Just in case something terrible has happened in the
             // implementation....
             assert((index - index_offset_) % alignment_ == 0);
 
             T * component = reinterpret_cast<T * >(&data_pool_[index]);
-            return component;
+            return *component;
          }
 
-         ExternalUidPoolAllocator(void);
+         BytePool(void);
 
-         ExternalUidPoolAllocator(const ExternalUidPoolAllocator &);
+         BytePool(const BytePool &);
 
-         ExternalUidPoolAllocator(ExternalUidPoolAllocator &);
+         BytePool(BytePool &);
+
    };
+
 }
 
 #endif
