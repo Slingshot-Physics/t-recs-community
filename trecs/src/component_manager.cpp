@@ -22,6 +22,21 @@ namespace trecs
       max_size_ = other.max_size_;
       signatures_ = other.signatures_;
 
+      // Free all of the underlying data.
+      for (auto & allocator : allocators_)
+      {
+         allocator.reset(nullptr);
+      }
+
+      // Delete all of the existing allocator pointers.
+      allocators_.clear();
+
+      // Re-append null pointers to the allocator pointers.
+      for (unsigned int i = 0; i < max_num_signatures; ++i)
+      {
+         allocators_.push_back(nullptr);
+      }
+
       for (unsigned int i = 0; i < other.allocators_.size(); ++i)
       {
          if (other.allocators_[i].get() != nullptr)
@@ -48,6 +63,21 @@ namespace trecs
 
       max_size_ = other.max_size_;
       signatures_ = other.signatures_;
+
+      // Free all of the underlying data.
+      for (auto & allocator : allocators_)
+      {
+         allocator.reset(nullptr);
+      }
+
+      // Delete all of the existing allocator pointers.
+      allocators_.clear();
+
+      // Re-append null pointers to the allocator pointers.
+      for (unsigned int i = 0; i < max_num_signatures; ++i)
+      {
+         allocators_.push_back(nullptr);
+      }
 
       for (unsigned int i = 0; i < other.allocators_.size(); ++i)
       {
