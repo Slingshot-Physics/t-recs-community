@@ -9,6 +9,7 @@ set(
     include/entity_component_buffer.hpp
     include/entity_manager.hpp
     include/ext_uid_byte_pool.hpp
+    include/ext_uid_object_pool.hpp
     include/pool_allocator_interface.hpp
     include/query_manager.hpp
     include/signature_manager.hpp

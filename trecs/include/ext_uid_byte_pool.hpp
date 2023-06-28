@@ -5,9 +5,7 @@
 
 #include "ecs_types.hpp"
 
-#include <algorithm>
 #include <cassert>
-#include <cstring>
 #include <map>
 #include <vector>
 
@@ -15,7 +13,7 @@
 
 namespace trecs
 {
-   // A template class that generates a user-specified, byte-aligned pool of
+   // A class template that generates a user-specified, byte-aligned pool of
    // data of fixed size. This class decouples unique identifiers from indices
    // through a mapping. Byte-boundaries are enforced by applying index offsets
    // and increments according to the alignment requirement and the size of the
@@ -99,6 +97,7 @@ namespace trecs
 
          // Clears out the entire byte array and resets the last free index to
          // the initial byte offset. Deletes all of the data in the allocator.
+         // Deletes the uid-index mapping.
          void clear(void) override
          {
             for (size_t i = 0; i < max_num_bytes_; ++i)
@@ -110,7 +109,7 @@ namespace trecs
             uid_to_index_.clear();
          }
 
-         int addComponent(uid_t new_component_uid, const T & component)
+         uid_t addComponent(uid_t new_component_uid, const T & component)
          {
             if (size() >= max_num_elements_)
             {
@@ -169,11 +168,11 @@ namespace trecs
             // Find the UID of the component that maps to the last free index
             // in the data array.
             uid_t uid_to_update = 0;
-            for (const auto & uid_to_index : uid_to_index_)
+            for (const auto & uid_index : uid_to_index_)
             {
-               if (uid_to_index.second == last_free_index_ - index_increment_)
+               if (uid_index.second == last_free_index_ - index_increment_)
                {
-                  uid_to_update = uid_to_index.first;
+                  uid_to_update = uid_index.first;
                   break;
                }
             }
