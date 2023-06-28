@@ -1,7 +1,7 @@
 #ifndef BYTE_POOL_HEADER
 #define BYTE_POOL_HEADER
 
-#include "pool_allocator_interface.hpp"
+#include "data_pool_interface.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -20,7 +20,7 @@ namespace trecs
    // and increments according to the alignment requirement and the size of the
    // underlying type.
    template <typename T>
-   class BytePool : public PoolAllocatorInterface
+   class BytePool : public IDataPool
    {
       public:
 
@@ -95,9 +95,7 @@ namespace trecs
             return *this;
          }
 
-         PoolAllocatorInterface & operator=(
-            const PoolAllocatorInterface & other
-         ) override
+         IDataPool & operator=(const IDataPool & other) override
          {
             if (this == &other)
             {

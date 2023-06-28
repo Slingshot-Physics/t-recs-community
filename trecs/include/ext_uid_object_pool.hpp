@@ -1,7 +1,7 @@
 #ifndef EXTERNAL_UID_OBJECT_POOL_HEADER
 #define EXTERNAL_UID_OBJECT_POOL_HEADER
 
-#include "pool_allocator_interface.hpp"
+#include "data_pool_interface.hpp"
 
 #include "ecs_types.hpp"
 
@@ -14,7 +14,7 @@
 namespace trecs
 {
    template <typename Object_T>
-   class ExternalUidObjectPool : public PoolAllocatorInterface
+   class ExternalUidObjectPool : public IDataPool
    {
       public:
 
@@ -64,9 +64,7 @@ namespace trecs
             return *this;
          }
 
-         PoolAllocatorInterface & operator=(
-            const PoolAllocatorInterface & other
-         ) override
+         IDataPool & operator=(const IDataPool & other) override
          {
             if (this == &other)
             {

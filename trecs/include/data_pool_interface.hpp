@@ -1,5 +1,5 @@
-#ifndef POOL_ALLOCATOR_INTERFACE_HEADER
-#define POOL_ALLOCATOR_INTERFACE_HEADER
+#ifndef DATA_POOL_INTERFACE_HEADER
+#define DATA_POOL_INTERFACE_HEADER
 
 #include "ecs_types.hpp"
 
@@ -8,13 +8,13 @@
 namespace trecs
 {
 
-   class PoolAllocatorInterface
+   class IDataPool
    {
       public:
          // Virtualized so that child classes' destructors can be called.
-         virtual ~PoolAllocatorInterface(void) { };
+         virtual ~IDataPool(void) { };
 
-         virtual PoolAllocatorInterface & operator=(const PoolAllocatorInterface & other) = 0;
+         virtual IDataPool & operator=(const IDataPool & other) = 0;
 
          virtual void removeComponent(uid_t uid) = 0;
 

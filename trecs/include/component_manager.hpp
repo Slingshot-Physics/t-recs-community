@@ -2,8 +2,8 @@
 #define COMPONENT_MANAGER_HEADER
 
 #include "component_array_wrapper.hpp"
+#include "data_pool_interface.hpp"
 #include "ext_uid_byte_pool.hpp"
-#include "pool_allocator_interface.hpp"
 #include "signature_manager.hpp"
 
 #include <iostream>
@@ -158,7 +158,7 @@ namespace trecs
          size_t max_size_;
 
          // This is a mapping of integer signature types to allocators.
-         std::vector<std::unique_ptr<PoolAllocatorInterface> > allocators_;
+         std::vector<std::unique_ptr<IDataPool> > allocators_;
 
          SignatureManager<signature_t> signatures_;
 
@@ -201,7 +201,7 @@ namespace trecs
                return nullptr;
             }
 
-            PoolAllocatorInterface * pool_base = allocators_.at(signature).get();
+            IDataPool * pool_base = allocators_.at(signature).get();
 
             if (pool_base == nullptr)
             {
@@ -225,7 +225,7 @@ namespace trecs
                return nullptr;
             }
 
-            PoolAllocatorInterface * pool_base = allocators_.at(signature).get();
+            IDataPool * pool_base = allocators_.at(signature).get();
 
             if (pool_base == nullptr)
             {

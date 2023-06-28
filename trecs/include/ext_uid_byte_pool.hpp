@@ -1,7 +1,7 @@
-#ifndef EXT_UID_BYTE_POOL_HEADER
-#define EXT_UID_BYTE_POOL_HEADER
+#ifndef EXTERNAL_UID_BYTE_POOL_HEADER
+#define EXTERNAL_UID_BYTE_POOL_HEADER
 
-#include "pool_allocator_interface.hpp"
+#include "data_pool_interface.hpp"
 
 #include "ecs_types.hpp"
 
@@ -19,7 +19,7 @@ namespace trecs
    // and increments according to the alignment requirement and the size of the
    // underlying type.
    template <typename T>
-   class ExternalUidBytePool : public PoolAllocatorInterface
+   class ExternalUidBytePool : public IDataPool
    {
       public:
 
@@ -72,9 +72,7 @@ namespace trecs
             return *this;
          }
 
-         PoolAllocatorInterface & operator=(
-            const PoolAllocatorInterface & other
-         ) override
+         IDataPool & operator=(const IDataPool & other) override
          {
             if (this == &other)
             {

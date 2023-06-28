@@ -5,12 +5,12 @@ set(
     include/byte_pool.hpp
     include/component_array_wrapper.hpp
     include/component_manager.hpp
+    include/data_pool_interface.hpp
     include/ecs_types.hpp
     include/entity_component_buffer.hpp
     include/entity_manager.hpp
     include/ext_uid_byte_pool.hpp
     include/ext_uid_object_pool.hpp
-    include/pool_allocator_interface.hpp
     include/query_manager.hpp
     include/signature_manager.hpp
     include/system_manager.hpp

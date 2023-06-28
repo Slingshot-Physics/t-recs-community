@@ -13,9 +13,9 @@
 TEST_CASE( "pool allocator interface works", "[ExternalUidBytePool]" )
 {
    std::cout << "adding new allocators\n";
-   trecs::PoolAllocatorInterface * rb_alloc = new trecs::ExternalUidBytePool<complicatedType_t<0> >(100, 8);
+   trecs::IDataPool * rb_alloc = new trecs::ExternalUidBytePool<complicatedType_t<0> >(100, 8);
    std::cout << "added an allocator for the complicated type\n";
-   trecs::PoolAllocatorInterface * mesh_alloc = new trecs::ExternalUidBytePool<complicatedType_t<5> >(100, 8);
+   trecs::IDataPool * mesh_alloc = new trecs::ExternalUidBytePool<complicatedType_t<5> >(100, 8);
    std::cout << "added an allocator for another complicated type\n";
 
    REQUIRE(rb_alloc->size() == 0);
@@ -502,7 +502,7 @@ TEST_CASE(
 
    // alloc_b = alloc;
 
-   trecs::PoolAllocatorInterface & alloc_b_base = alloc_b;
+   trecs::IDataPool & alloc_b_base = alloc_b;
 
    alloc_b_base = alloc;
 
