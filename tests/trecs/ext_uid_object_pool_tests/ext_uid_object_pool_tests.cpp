@@ -1,4 +1,5 @@
 #include "ext_uid_object_pool.hpp"
+#include "entity_component_buffer.hpp"
 
 #include "complicated_types.hpp"
 
@@ -491,4 +492,116 @@ TEST_CASE(
          REQUIRE( var_a.stuff.things[i] == var_b.stuff.things[i] );
       }
    }
+}
+
+TEST_CASE( "add empty ECB as a component and add components to the ECB", "[ExternalUidObjectPool]" )
+{
+   trecs::ExternalUidObjectPool<trecs::EntityComponentBuffer<16> > pool(4);
+
+   trecs::EntityComponentBuffer<16> temp_ecb;
+   temp_ecb.registerComponent<complicatedType_t<73> >();
+   temp_ecb.registerComponent<float>();
+   temp_ecb.registerComponent<bigType_t>();
+   pool.addComponent(0, temp_ecb);
+   temp_ecb.release();
+
+   REQUIRE( pool.getComponent(0) != nullptr );
+
+   auto new_ecb_entity = pool.getComponent(0)->addEntity();
+   pool.getComponent(0)->updateComponent(new_ecb_entity, 4.123f);
+   pool.getComponent(0)->updateComponent(new_ecb_entity, complicatedType_t<73>{123, -456.789f});
+
+   auto ecb = pool.getComponent(0);
+
+   REQUIRE( *ecb->getComponent<float>(new_ecb_entity) == 4.123f );
+   REQUIRE( *ecb->getComponent<complicatedType_t<73> >(new_ecb_entity) == complicatedType_t<73>{123, -456.789f} );
+}
+
+TEST_CASE( "add maximum number of ECB's as components", "[ExternalUidObjectPool]" )
+{
+   trecs::ExternalUidObjectPool<trecs::EntityComponentBuffer<16> > pool(4);
+
+   {
+      trecs::EntityComponentBuffer<16> temp_ecb;
+      temp_ecb.registerComponent<complicatedType_t<73> >();
+      temp_ecb.registerComponent<float>();
+      temp_ecb.registerComponent<bigType_t>();
+      pool.addComponent(0, temp_ecb);
+      temp_ecb.release();
+
+      auto ecb = pool.getComponent(0);
+      REQUIRE( ecb != nullptr );
+   }
+
+   {
+      trecs::EntityComponentBuffer<16> temp_ecb;
+      temp_ecb.registerComponent<complicatedType_t<2> >();
+      temp_ecb.registerComponent<int>();
+      pool.addComponent(1, temp_ecb);
+      temp_ecb.release();
+
+      auto ecb = pool.getComponent(1);
+      REQUIRE( ecb != nullptr );
+   }
+
+   {
+      trecs::EntityComponentBuffer<16> temp_ecb;
+      temp_ecb.registerComponent<trecs::edge_t>();
+      temp_ecb.registerComponent<complicatedType_t<17> >();
+      temp_ecb.registerComponent<unsigned int>();
+      temp_ecb.registerComponent<char>();
+      temp_ecb.registerComponent<float>();
+      pool.addComponent(2, temp_ecb);
+      temp_ecb.release();
+
+      auto ecb = pool.getComponent(2);
+      REQUIRE( ecb != nullptr );
+   }
+
+   {
+      trecs::EntityComponentBuffer<16> temp_ecb;
+      temp_ecb.registerComponent<complicatedType_t<17> >();
+      temp_ecb.registerComponent<unsigned int>();
+      temp_ecb.registerComponent<float>();
+      pool.addComponent(3, temp_ecb);
+      temp_ecb.release();
+
+      auto ecb = pool.getComponent(3);
+      REQUIRE( ecb != nullptr );
+   }
+
+   REQUIRE( pool.size() == 4 );
+
+   {
+      trecs::EntityComponentBuffer<16> temp_ecb;
+      temp_ecb.registerComponent<complicatedType_t<22> >();
+      temp_ecb.registerComponent<unsigned int>();
+      temp_ecb.registerComponent<float>();
+      REQUIRE( pool.addComponent(4, temp_ecb) == -1);
+   }
+
+   REQUIRE( pool.size() == 4 );
+}
+
+TEST_CASE( "add non-empty ECB as a component and add components to the ECB", "[ExternalUidObjectPool]" )
+{
+   trecs::ExternalUidObjectPool<trecs::EntityComponentBuffer<16> > pool(4);
+
+   trecs::EntityComponentBuffer<16> temp_ecb;
+   temp_ecb.registerComponent<complicatedType_t<73> >();
+   temp_ecb.registerComponent<float>();
+   temp_ecb.registerComponent<bigType_t>();
+
+   trecs::uid_t new_ecb_entity = temp_ecb.addEntity();
+   temp_ecb.updateComponent(new_ecb_entity, 4.123f);
+   temp_ecb.updateComponent(new_ecb_entity, complicatedType_t<73>{123, -456.789f});
+   pool.addComponent(0, temp_ecb);
+   temp_ecb.release();
+
+   REQUIRE( pool.getComponent(0) != nullptr );
+
+   auto ecb = pool.getComponent(0);
+
+   REQUIRE( *ecb->getComponent<float>(new_ecb_entity) == 4.123f );
+   REQUIRE( *ecb->getComponent<complicatedType_t<73> >(new_ecb_entity) == complicatedType_t<73>{123, -456.789f} );
 }

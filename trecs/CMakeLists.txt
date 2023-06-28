@@ -21,7 +21,6 @@ set(
     sources
     src/allocator.cpp
     src/component_manager.cpp
-    src/entity_component_buffer.cpp
     src/entity_manager.cpp
     src/system_manager.cpp
 )

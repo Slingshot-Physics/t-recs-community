@@ -13,34 +13,74 @@
 
 namespace trecs
 {
+   template <unsigned int BufferSize>
    class EntityComponentBuffer
    {
       public:
-         EntityComponentBuffer(size_t max_buffer_size)
-            : max_buffer_size_(max_buffer_size)
-            , entities_(max_buffer_size_)
-            , components_(max_buffer_size_)
+         EntityComponentBuffer(void)
+            : entities_(BufferSize)
+            , components_(BufferSize)
          { }
 
          // Copies the source ECB into this destination ECB without releasing
          // the source ECB's ownership of its allocators.
-         EntityComponentBuffer & operator=(
-            const EntityComponentBuffer & other
-         );
+         EntityComponentBuffer<BufferSize> & operator=(
+            const EntityComponentBuffer<BufferSize> & other
+         )
+         {
+            if (this == &other)
+            {
+               return *this;
+            }
+
+            entities_ = other.entities_;
+            components_ = other.components_;
+
+            return *this;
+         }
 
          // Copies the source ECB into this destination ECB and releases the
          // source ECB's ownership of its allocators.
-         EntityComponentBuffer & operator=(EntityComponentBuffer & other);
+         EntityComponentBuffer<BufferSize> & operator=(
+            EntityComponentBuffer<BufferSize> & other
+         )
+         {
+            if (this == &other)
+            {
+               return *this;
+            }
 
-         uid_t addEntity(void);
+            entities_ = other.entities_;
+            components_ = other.components_;
 
-         void removeEntity(uid_t entity_uid);
+            return *this;
+         }
 
-         size_t numEntities(void) const;
+         uid_t addEntity(void)
+         {
+            return entities_.addEntity();
+         }
 
-         size_t numSignatures(void) const;
+         void removeEntity(uid_t entity_uid)
+         {
+            entities_.removeEntity(entity_uid);
+            components_.removeComponents(entity_uid);
+         }
 
-         void release(void);
+         size_t numEntities(void) const
+         {
+            return entities_.size();
+         }
+
+         size_t numSignatures(void) const
+         {
+            return components_.getNumSignatures();
+         }
+
+         void release(void)
+         {
+            components_.release();
+         }
 
          // Returns true if a type list is supported by this ECB, false
          // otherwise.
@@ -162,8 +202,6 @@ namespace trecs
          }
 
       private:
-         size_t max_buffer_size_;
-
          EntityManager entities_;
 
          ComponentManager components_;

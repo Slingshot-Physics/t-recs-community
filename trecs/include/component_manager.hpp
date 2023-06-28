@@ -37,6 +37,7 @@ namespace trecs
          // Releases the ownership of the pool allocators. This should only be
          // called if the source object has been assigned to some other
          // destination object.
+         // This does not free any of the allocated memory.
          void release(void);
 
          // Indicates that a component of a particular type can be added to
