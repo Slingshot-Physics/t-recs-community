@@ -3,7 +3,7 @@
 
 #include "component_array_wrapper.hpp"
 #include "data_pool_interface.hpp"
-#include "ext_uid_byte_pool.hpp"
+#include "ext_uid_object_pool.hpp"
 #include "signature_manager.hpp"
 
 #include <iostream>
@@ -54,7 +54,7 @@ namespace trecs
             }
 
             allocators_[new_sig].reset(
-               new ExternalUidBytePool<Component_T>(max_size_, 8)
+               new ExternalUidObjectPool<Component_T>(max_size_)
             );
          }
 
@@ -74,7 +74,7 @@ namespace trecs
             const Component_T & component
          )
          {
-            ExternalUidBytePool<Component_T> * pool = \
+            ExternalUidObjectPool<Component_T> * pool = \
                retrievePoolByType<Component_T>();
 
             if (pool == nullptr)
@@ -92,7 +92,7 @@ namespace trecs
          template <typename Component_T>
          void removeComponent(uid_t removed_component_uid)
          {
-            ExternalUidBytePool<Component_T> * pool = \
+            ExternalUidObjectPool<Component_T> * pool = \
                retrievePoolByType<Component_T>();
 
             if (pool == nullptr)
@@ -165,7 +165,7 @@ namespace trecs
          template <typename Component_T>
          Component_T * retrieveComponentByUid(uid_t component_uid)
          {
-            ExternalUidBytePool<Component_T> * pool_derived = \
+            ExternalUidObjectPool<Component_T> * pool_derived = \
                retrievePoolByType<Component_T>();
 
             if (pool_derived == nullptr)
@@ -179,7 +179,7 @@ namespace trecs
          template <typename Component_T>
          const Component_T * retrieveComponentByUid(uid_t component_uid) const
          {
-            ExternalUidBytePool<Component_T> * pool_derived = \
+            ExternalUidObjectPool<Component_T> * pool_derived = \
                retrievePoolByType<Component_T>();
 
             if (pool_derived == nullptr)
@@ -191,7 +191,7 @@ namespace trecs
          }
 
          template <typename Component_T>
-         ExternalUidBytePool<Component_T> * retrievePoolByType(void)
+         ExternalUidObjectPool<Component_T> * retrievePoolByType(void)
          {
             signature_t signature = getSignature<Component_T>();
 
@@ -208,14 +208,14 @@ namespace trecs
                std::cout << "Pool signature hasn't been created for component signature " << signature << "\n";
             }
 
-            ExternalUidBytePool<Component_T> * pool_derived = \
-               static_cast<ExternalUidBytePool<Component_T> *>(pool_base);
+            ExternalUidObjectPool<Component_T> * pool_derived = \
+               static_cast<ExternalUidObjectPool<Component_T> *>(pool_base);
 
             return pool_derived;
          }
 
          template <typename Component_T>
-         const ExternalUidBytePool<Component_T> * retrievePoolByType(void) const
+         const ExternalUidObjectPool<Component_T> * retrievePoolByType(void) const
          {
             signature_t signature = getSignature<Component_T>();
 
@@ -232,8 +232,8 @@ namespace trecs
                std::cout << "Pool signature hasn't been created for component signature " << signature << "\n";
             }
 
-            ExternalUidBytePool<Component_T> * pool_derived = \
-               static_cast<ExternalUidBytePool<Component_T> *>(pool_base);
+            ExternalUidObjectPool<Component_T> * pool_derived = \
+               static_cast<ExternalUidObjectPool<Component_T> *>(pool_base);
 
             return pool_derived;
          }
