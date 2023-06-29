@@ -61,7 +61,6 @@ TEST_CASE( "register one component", "[ComponentManager]" )
    trecs::ComponentManager cman(120);
    cman.registerComponent<complicatedType_t<0> >();
 
-   // fzx::types::rigidBody_t tempBody;
    complicatedType_t<0> comp_a;
    comp_a.int_field = 202;
 
@@ -71,6 +70,59 @@ TEST_CASE( "register one component", "[ComponentManager]" )
    if (cman.getComponent<complicatedType_t<0> >(1) != nullptr)
    {
       REQUIRE(cman.getComponent<complicatedType_t<0> >(1)->int_field == 202);
+   }
+}
+
+// Register the same component multiple times, verify that it doesn't overwrite
+// any existing data when it's re-registered.
+TEST_CASE( "register same component multiple times", "[ComponentManager]" )
+{
+   trecs::ComponentManager cman(120);
+   cman.registerComponent<complicatedType_t<0> >();
+
+   complicatedType_t<0> comp_a;
+   comp_a.int_field = 202;
+
+   // Add the same component a ton of times.
+   for (int i = 0; i < 100; ++i)
+   {
+      cman.addComponent<complicatedType_t<0> >(i, comp_a);
+   }
+
+   // Verify that the component is present across all of the entities
+   for (int i = 0; i < cman.getNumComponents<complicatedType_t<0> >(); ++i)
+   {
+      REQUIRE(cman.getComponent<complicatedType_t<0> >(i) != nullptr);
+      if (cman.getComponent<complicatedType_t<0> >(i) != nullptr)
+      {
+         REQUIRE(cman.getComponent<complicatedType_t<0> >(i)->int_field == 202);
+      }
+   }
+
+   // Register the same component again
+   cman.registerComponent<complicatedType_t<0> >();
+
+   // Verify that all of the old data is still present
+   for (int i = 0; i < cman.getNumComponents<complicatedType_t<0> >(); ++i)
+   {
+      REQUIRE(cman.getComponent<complicatedType_t<0> >(i) != nullptr);
+      if (cman.getComponent<complicatedType_t<0> >(i) != nullptr)
+      {
+         REQUIRE(cman.getComponent<complicatedType_t<0> >(i)->int_field == 202);
+      }
+   }
+
+   // And just to be sure, register the same component again
+   cman.registerComponent<complicatedType_t<0> >();
+
+   // Verify that all of the old data is still present
+   for (int i = 0; i < cman.getNumComponents<complicatedType_t<0> >(); ++i)
+   {
+      REQUIRE(cman.getComponent<complicatedType_t<0> >(i) != nullptr);
+      if (cman.getComponent<complicatedType_t<0> >(i) != nullptr)
+      {
+         REQUIRE(cman.getComponent<complicatedType_t<0> >(i)->int_field == 202);
+      }
    }
 }
 

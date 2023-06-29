@@ -45,8 +45,14 @@ namespace trecs
          template <typename Component_T>
          void registerComponent(void)
          {
-            signature_t new_sig = signatures_.registerComponent<Component_T>();
+            signature_t old_sig = signatures_.getSignature<Component_T>();
+            if (old_sig != error_signature)
+            {
+               std::cout << "Component with signature " << old_sig << " has already been registered\n";
+               return;
+            }
 
+            signature_t new_sig = signatures_.registerComponent<Component_T>();
             if (new_sig == error_signature)
             {
                std::cout << "Couldn't register signature for new component!\n";
