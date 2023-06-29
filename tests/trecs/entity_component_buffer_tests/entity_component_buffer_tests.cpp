@@ -407,6 +407,29 @@ TEST_CASE( "add more than allocated components, then delete them all", "[EntityC
    REQUIRE( ecb.getComponentEntities<complicatedType_t<0> >().size() == 0);
 }
 
+TEST_CASE( "register multiple components at once", "[EntityComponentBuffer]" )
+{
+   const size_t max_size = 256;
+   trecs::EntityComponentBuffer<max_size> ecb;
+
+   ecb.registerComponents<complicatedType_t<0>, int, float >();
+
+   complicatedType_t<0> temp_ct = {15, -90.43f};
+
+   auto new_entity = ecb.addEntity();
+   ecb.updateComponent(new_entity, 1);
+   ecb.updateComponent(new_entity, 8.5f);
+   ecb.updateComponent(new_entity, temp_ct);
+
+   REQUIRE( ecb.getComponent<int>(new_entity) != nullptr );
+   REQUIRE( ecb.getComponent<float>(new_entity) != nullptr );
+   REQUIRE( ecb.getComponent<complicatedType_t<0> >(new_entity) != nullptr );
+
+   REQUIRE( *ecb.getComponent<int>(new_entity) == 1 );
+   REQUIRE( *ecb.getComponent<float>(new_entity) == 8.5f );
+   REQUIRE( *ecb.getComponent<complicatedType_t<0> >(new_entity) == temp_ct );
+}
+
 TEST_CASE( "assignment operator empty to empty", "[EntityComponentBuffer]" )
 {
    const size_t max_size = 256;
@@ -727,4 +750,23 @@ TEST_CASE( "assignment operator const non-empty to empty", "[EntityComponentBuff
       REQUIRE( ecb2.getComponent<complicatedType_t<0> >(entity_ct.first)->float_field == entity_ct.second.float_field );
    }
 
+}
+
+TEST_CASE( "verify that the registration lock works", "[EntityComponentBuffer]")
+{
+   const size_t max_size = 256;
+   trecs::EntityComponentBuffer<max_size> ecb1;
+   ecb1.registerComponent<complicatedType_t<0> >();
+   ecb1.registerComponent<int>();
+   ecb1.registerComponent<float>();
+
+   ecb1.updateComponent(ecb1.addEntity(), 2);
+   ecb1.updateComponent(ecb1.addEntity(), 2.3f);
+   ecb1.updateComponent(ecb1.addEntity(), complicatedType_t<0>{123, -0.00123f});
+
+   ecb1.lockRegistration();
+
+   ecb1.registerComponent<unsigned char>();
+   REQUIRE( ecb1.supportsComponents<int, float, complicatedType_t<0> >() );
+   REQUIRE( !ecb1.supportsComponents<unsigned char>() );
 }

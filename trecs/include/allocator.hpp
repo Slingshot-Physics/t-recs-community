@@ -4,6 +4,7 @@
 #include "archetype.hpp"
 #include "component_manager.hpp"
 #include "ecs_types.hpp"
+#include "entity_component_buffer.hpp"
 #include "entity_manager.hpp"
 #include "system_manager.hpp"
 #include "query_manager.hpp"
@@ -54,6 +55,15 @@ namespace trecs
             return components_.getSignature<Component_T>();
          }
 
+         template <unsigned int BufferSize>
+         bool addComponent(uid_t entity_uid, const EntityComponentBuffer<BufferSize> & ecb)
+         {
+            (void)entity_uid;
+            (void)ecb;
+            std::cout << "Use the 'addEntityComponentBuffer' method instead\n";
+            return false;
+         }
+
          // Attempts to add a component to an entity UID. If the entity UID is
          // inactive or if the component type isn't supported, or if another
          // component of the same supported type is already associated with
@@ -80,7 +90,7 @@ namespace trecs
 
             DefaultArchetype new_arch = old_arch;
             new_arch.mergeSignature(component_sig);
-            components_.addComponent<Component_T>(entity_uid, component);
+            components_.addComponent(entity_uid, component);
             entities_.setArchetype(entity_uid, new_arch);
             queries_.moveEntity(entity_uid, old_arch, new_arch);
 
@@ -90,7 +100,7 @@ namespace trecs
          // Attempts to update a component on an active entity UID. If a
          // component of the same type is already associated with this entity,
          // then the new component replaces the old component. If the new
-         // component type isn't associated with the entity, the the entity's
+         // component type isn't associated with the entity, then the entity's
          // signature is updated and the component is assigned to the entity.
          template <typename Component_T>
          bool updateComponent(uid_t entity_uid, const Component_T & component)
@@ -118,7 +128,7 @@ namespace trecs
 
             DefaultArchetype new_arch = old_arch;
             new_arch.mergeSignature(component_sig);
-            components_.addComponent<Component_T>(entity_uid, component);
+            components_.addComponent(entity_uid, component);
             entities_.setArchetype(entity_uid, new_arch);
             queries_.moveEntity(entity_uid, old_arch, new_arch);
 
@@ -133,6 +143,7 @@ namespace trecs
          {
             if (!entities_.entityActive(entity_uid))
             {
+               std::cout << "Entity: " << entity_uid << " inactive\n";
                return nullptr;
             }
 
@@ -141,6 +152,7 @@ namespace trecs
 
             if (!old_arch.supports(component_sig))
             {
+               std::cout << "Entity doesn't have the component signature " << component_sig << "\n";
                return nullptr;
             }
 
@@ -208,6 +220,31 @@ namespace trecs
          void registerComponent(void)
          {
             components_.registerComponent<Component_T>();
+         }
+
+         template <unsigned int BufferSize>
+         uid_t addEntityComponentBuffer(void)
+         {
+            registerComponent<EntityComponentBuffer<BufferSize> >();
+
+            uid_t ecb_entity = addEntity();
+            EntityComponentBuffer<BufferSize> temp_ecb;
+
+            if (!updateComponent(ecb_entity, temp_ecb))
+            {
+               std::cout << "Couldn't add ECB as a component\n";
+               return -1;
+            }
+
+            temp_ecb.release();
+
+            return ecb_entity;
+         }
+
+         template <unsigned int BufferSize>
+         EntityComponentBuffer<BufferSize> * getEntityComponentBuffer(uid_t entity)
+         {
+            return getComponent<EntityComponentBuffer<BufferSize> >(entity);
          }
 
          template <typename System_T>

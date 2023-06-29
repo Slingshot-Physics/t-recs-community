@@ -1583,3 +1583,59 @@ TEST_CASE( "assignment operator from const source to non-empty destination", "[C
    REQUIRE( *cman2.getComponent<int>(3) == its[3] );
    REQUIRE( *cman2.getComponent<int>(4) == its[4] );
 }
+
+TEST_CASE( "assignment to unconstructed CM", "[ComponentManager]" )
+{
+   typedef struct byte_cm
+   {
+      byte_cm(void)
+      {
+         for (int i = 0; i < 512; ++i)
+         {
+            bytes[i] = 0;
+         }
+      }
+
+      unsigned char bytes[512];
+   } byte_cm_t;
+
+   byte_cm_t raw_bytes;
+
+   trecs::ComponentManager * byte_cm = reinterpret_cast<trecs::ComponentManager *>(&(raw_bytes.bytes[0]));
+
+   trecs::ComponentManager cm(128);
+
+   cm.registerComponent<float>();
+   cm.registerComponent<int>();
+   cm.registerComponent<complicatedType_t<24> >();
+
+   cm.addComponent(0, 3.123f);
+   cm.addComponent(0, 3);
+   cm.addComponent(0, complicatedType_t<24>{987, -1234.32456f});
+
+   cm.addComponent(1, 3.123f);
+   cm.addComponent(1, 3);
+   cm.addComponent(1, complicatedType_t<24>{987, -1234.32456f});
+
+   cm.addComponent(2, 3.123f);
+   cm.addComponent(2, 3);
+   cm.addComponent(2, complicatedType_t<24>{987, -1234.32456f});
+
+   cm.addComponent(3, 3.123f);
+   cm.addComponent(3, 3);
+   cm.addComponent(3, complicatedType_t<24>{987, -1234.32456f});
+
+   cm.addComponent(4, 3.123f);
+   cm.addComponent(4, 3);
+   cm.addComponent(4, complicatedType_t<24>{987, -1234.32456f});
+
+   *byte_cm = cm;
+
+   for (int i = 0; i < 4; ++i)
+   {
+      REQUIRE( *byte_cm->getComponent<int>(i) == 3 );
+      REQUIRE( *byte_cm->getComponent<float>(i) == 3.123f );
+      REQUIRE( byte_cm->getComponent<complicatedType_t<24> >(i)->int_field == 987 );
+      REQUIRE( byte_cm->getComponent<complicatedType_t<24> >(i)->float_field == -1234.32456f );
+   }
+}

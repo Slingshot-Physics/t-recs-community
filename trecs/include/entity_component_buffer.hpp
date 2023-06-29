@@ -20,6 +20,7 @@ namespace trecs
          EntityComponentBuffer(void)
             : entities_(BufferSize)
             , components_(BufferSize)
+            , registration_locked_(false)
          { }
 
          // Copies the source ECB into this destination ECB without releasing
@@ -56,6 +57,11 @@ namespace trecs
             return *this;
          }
 
+         void lockRegistration(void)
+         {
+            registration_locked_ = true;
+         }
+
          uid_t addEntity(void)
          {
             return entities_.addEntity();
@@ -77,6 +83,8 @@ namespace trecs
             return components_.getNumSignatures();
          }
 
+         // Releases the ownership of any existing components but does not
+         // free them.
          void release(void)
          {
             components_.release();
@@ -96,7 +104,19 @@ namespace trecs
          template <typename Component_T>
          void registerComponent(void)
          {
-            components_.registerComponent<Component_T>();
+            if (!registration_locked_)
+            {
+               components_.registerComponent<Component_T>();
+            }
+         }
+
+         template <class...Types>
+         void registerComponents(void)
+         {
+            if (!registration_locked_)
+            {
+               fancyRegisterComponents<Types...>();
+            }
          }
 
          // Returns a copy of the vector of entities associated with a
@@ -206,6 +226,8 @@ namespace trecs
 
          ComponentManager components_;
 
+         bool registration_locked_;
+
          template <class T>
          void supportsComponents(bool & supported) const
          {
@@ -223,6 +245,20 @@ namespace trecs
             }
 
             supportsComponents<TheRest...>(supported);
+         }
+
+         template <class T>
+         void fancyRegisterComponents(void)
+         {
+            components_.registerComponent<T>();
+         }
+
+         template <class First, class...TheRest>
+         auto fancyRegisterComponents(void) ->
+            typename std::enable_if<sizeof...(TheRest) != 0, void>::type
+         {
+            components_.registerComponent<First>();
+            fancyRegisterComponents<TheRest...>();
          }
 
    };

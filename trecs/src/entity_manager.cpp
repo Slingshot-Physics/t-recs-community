@@ -26,8 +26,6 @@ namespace trecs
       {
          uid_pool_.push_back(i);
       }
-
-      std::cout << "number of possible signatures: " << archetypes_.size() << "\n";
    }
 
    EntityManager & EntityManager::operator=(const EntityManager & other)

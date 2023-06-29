@@ -42,37 +42,16 @@ typedef struct thing_collector
 
    }
 
-   void initialize(void)
-   {
-
-   }
-
-   template <class First, class...Types>
-   void initialize(First f, Types...args)
-   {
-      containers.push_back(new some_derived<First>);
-      initialize(args...);
-   }
-
    template <class T>
    void initialize2(void)
    {
       containers.push_back(new some_derived<T>);
    }
 
-   // template <class First, class...Types>
-   // void initialize2(void)
-   // {
-   //    containers.push_back(new some_derived<First>);
-   //    // initialize2<class...Types>();
-   //    initialize2<Types...>();
-   // }
-
    template <class First, class...Types>
    typename std::enable_if<sizeof...(Types) != 0, bool>::type initialize2(void)
    {
       containers.push_back(new some_derived<First>);
-      // initialize2<class...Types>();
       initialize2<Types...>();
       return true;
    }
@@ -95,6 +74,29 @@ struct silly_t
    Label_T label;
 };
 
+template <unsigned int Size>
+struct array_t
+{
+   int arr[Size];
+};
+
+template <unsigned int N, typename A, typename...Types>
+void stuff(void)
+{
+   // int arr[N];
+   array_t<N> arr;
+
+   for (int i = 0; i < N; ++i)
+   {
+      arr.arr[i] = 2 * i;
+   }
+
+   thing_collector tc;
+   tc.initialize2<A, Types...>();
+
+   std::cout << "num weird containers:" << tc.containers.size() << "\n";
+}
+
 int main(void)
 {
    int i = 0;
@@ -106,6 +108,8 @@ int main(void)
    c.initialize2<int, float, anon_t, silly_t<uint8_t> >();
 
    std::cout << "num containers: " << c.containers.size() << "\n";
+
+   stuff<5, int, float, anon_t, silly_t<uint8_t> >();
 
    return 0;
 }
