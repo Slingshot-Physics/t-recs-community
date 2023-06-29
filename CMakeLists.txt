@@ -10,6 +10,7 @@ project(
 enable_testing()
 
 option( BUILD_TRECS_TESTS "Build tests with the ECS framework" ON )
+option( BUILD_TRECS_DEMOS "Build demos with the ECS framework" ON )
 
 # Some of the template instantiations make very big .obj files, but this only
 # seems to be a problem on Windows with mingw.
@@ -30,4 +31,10 @@ add_subdirectory( trecs )
 #    set( BUILD_TRECS_TESTS 0 )
 if ( BUILD_TRECS_TESTS )
     add_subdirectory( tests )
+endif()
+
+# Disable this in a higher level by writing:
+#    set( BUILD_TRECS_DEMOS 0 )
+if ( BUILD_TRECS_DEMOS )
+    add_subdirectory( demos )
 endif()

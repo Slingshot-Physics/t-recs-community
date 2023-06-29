@@ -67,9 +67,36 @@ jobs:
           cd build-ubuntu-workflow/build
           ctest -V
 
-  build-debug-no-tests:
+  run-release-demos:
     runs-on: [self-hosted, linux]
     needs: run-release-tests
+    container:
+      image: ${{vars.BUILD_IMAGE}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: build-ubuntu-workflow
+          submodules: true
+
+      - name: Build in release
+        run: |
+          cd build-ubuntu-workflow
+          mkdir build
+          cd build
+          cmake -DBUILD_TRECS_DEMOS=1 -DCMAKE_BUILD_TYPE=release ..
+          make -j4
+          cd ..
+
+      - name: Run demos
+        run: |
+          cd build-ubuntu-workflow/build
+          ./multi_component_multi_system
+          ./multi_component_system
+
+  build-debug-no-tests:
+    runs-on: [self-hosted, linux]
+    needs: run-release-demos
     container:
       image: ${{vars.BUILD_IMAGE}}
     steps:
