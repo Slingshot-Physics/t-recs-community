@@ -63,6 +63,25 @@ TEST_CASE("add and retrieve registered signatures", "[SignatureManager]")
    REQUIRE( float_sig != rigid_body_sig );
 }
 
+TEST_CASE("report component registration correctly", "[SignatureManager]")
+{
+   trecs::DefaultSignatureManager sig_manager;
+
+   REQUIRE( !sig_manager.componentRegistered<float>() );
+   REQUIRE( !sig_manager.componentRegistered<int>() );
+   REQUIRE( !sig_manager.componentRegistered<complicatedType_t<0> >() );
+
+   auto float_sig = sig_manager.registerComponent<float>();
+   auto int_sig = sig_manager.registerComponent<int>();
+   auto rigid_body_sig = sig_manager.registerComponent<complicatedType_t<0> >();
+
+   REQUIRE( sig_manager.componentRegistered<float>() );
+   REQUIRE( sig_manager.componentRegistered<int>() );
+   REQUIRE( sig_manager.componentRegistered<complicatedType_t<0> >() );
+
+   REQUIRE( !sig_manager.componentRegistered<complicatedType_t<1> >() );
+}
+
 // Verifies that the signatures for more than 32 unique registered components
 // are all different.
 TEST_CASE("register more than 32 components", "[SignatureManager]")

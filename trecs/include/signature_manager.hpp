@@ -31,12 +31,6 @@ namespace trecs
             signature_counter_ = other.signature_counter_;
             id_to_signature_.clear();
             id_to_signature_ = other.id_to_signature_;
-            // id_to_signature_.insert(other.id_to_signature_.begin(), other.id_to_signature_.end());
-            // for (const auto & other_id_to_sig : other.id_to_signature_)
-            // {
-            //    id_to_signature_[other_id_to_sig.first] = other_id_to_sig.second;
-            //    // id_to_signature_.insert()
-            // }
 
             return *this;
          }
@@ -51,10 +45,16 @@ namespace trecs
             return registerTypeId(type_id);
          }
 
+         // Returns true if the component is registered, false otherwise.
+         template <typename Component_T>
+         bool componentRegistered(void) const
+         {
+            return id_to_signature_.find(getTypeId<Component_T>()) != id_to_signature_.end();
+         }
+
          // Retrieves a signature for a particular component type if the
          // component has been registered. Returns an error signature if the
          // component type has not been registered.
-         
          template <typename Component_T>
          Signature_T getSignature(void) const
          {
