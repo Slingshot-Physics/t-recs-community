@@ -80,11 +80,19 @@ namespace trecs
             }
 
             Component_T * old_component = components_.getComponent<Component_T>(entity_uid);
-            signature_t component_sig = getComponentSignature<Component_T>();
 
             if (old_component != nullptr)
             {
-               std::cout << "Component with signature " << component_sig << " already exists on entity " << entity_uid << "\n";
+               std::cout << "Component type " << typeid(Component_T).name() << " already exists on entity " << entity_uid << "\n";
+               return false;
+            }
+
+            signature_t component_sig = getComponentSignature<Component_T>();
+
+            if (component_sig == error_signature)
+            {
+               std::cout << "Couldn't add component to entity UID: " << entity_uid << "\n";
+               std::cout << "\tComponent type " << typeid(Component_T).name() << " isn't registered\n";
                return false;
             }
 
@@ -126,9 +134,15 @@ namespace trecs
                return true;
             }
 
-            DefaultArchetype old_arch = entities_.getArchetype(entity_uid);
-            signature_t component_sig = getComponentSignature<Component_T>();
+            signature_t component_sig = components_.getSignature<Component_T>();
+            if (component_sig == error_signature)
+            {
+               std::cout << "Couldn't add component to entity UID: " << entity_uid << "\n";
+               std::cout << "\tComponent type " << typeid(Component_T).name() << " isn't registered\n";
+               return false;
+            }
 
+            DefaultArchetype old_arch = entities_.getArchetype(entity_uid);
             DefaultArchetype new_arch = old_arch;
             new_arch.mergeSignature(component_sig);
 

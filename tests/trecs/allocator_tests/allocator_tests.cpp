@@ -9,7 +9,7 @@
 
 #include <vector>
 
-TEST_CASE( "two components can't be added to one entity", "[allocator]")
+TEST_CASE( "two components can't be added to one entity", "[Allocator]")
 {
    complicatedType_t<0> comp_a;
    comp_a.float_field = 3.14f;
@@ -29,7 +29,18 @@ TEST_CASE( "two components can't be added to one entity", "[allocator]")
    REQUIRE( !allocator.addComponent(entity_id2, comp_a));
 }
 
-TEST_CASE( "components can be updated on one entity", "[allocator]")
+TEST_CASE( "can't add unregistered component types", "[Allocator]" )
+{
+   
+   trecs::Allocator allocator;
+   allocator.registerComponent<complicatedType_t<0> >();
+
+   auto new_entity = allocator.addEntity();
+
+   REQUIRE( !allocator.addComponent(new_entity, 3.f) );
+}
+
+TEST_CASE( "components can be updated on one entity", "[Allocator]")
 {
    complicatedType_t<0> comp_a;
    comp_a.float_field = 1.f;
@@ -50,7 +61,7 @@ TEST_CASE( "components can be updated on one entity", "[allocator]")
    REQUIRE( allocator.getComponent<complicatedType_t<0> >(entity_id1)->float_field == 2.5f );
 }
 
-TEST_CASE( "can't add components to inactive entity", "[allocator]")
+TEST_CASE( "can't add components to inactive entity", "[Allocator]")
 {
    complicatedType_t<0> comp_a;
    comp_a.float_field = 1.f;
@@ -72,7 +83,7 @@ TEST_CASE( "can't add components to inactive entity", "[allocator]")
    REQUIRE( !allocator.addComponent(7, comp_a));
 }
 
-TEST_CASE( "entities report correct components", "[allocator]")
+TEST_CASE( "entities report correct components", "[Allocator]")
 {
    trecs::Allocator allocator;
 
@@ -86,7 +97,7 @@ TEST_CASE( "entities report correct components", "[allocator]")
    REQUIRE( edge.flag == trecs::edge_flag::TRANSITIVE );
 }
 
-TEST_CASE( "edge components are deleted after entities are deleted", "[allocator]")
+TEST_CASE( "edge components are deleted after entities are deleted", "[Allocator]")
 {
    trecs::Allocator allocator;
 
@@ -106,7 +117,7 @@ TEST_CASE( "edge components are deleted after entities are deleted", "[allocator
    REQUIRE(edge_pointer == nullptr);
 }
 
-TEST_CASE( "changing the entity nodes on an edge component doesn't change entity uid", "[allocator]")
+TEST_CASE( "changing the entity nodes on an edge component doesn't change entity uid", "[Allocator]")
 {
    trecs::Allocator allocator;
 
@@ -131,7 +142,7 @@ TEST_CASE( "changing the entity nodes on an edge component doesn't change entity
    REQUIRE( edge.flag == trecs::edge_flag::NODE_A_TERMINAL );
 }
 
-TEST_CASE( "deleting an entity automatically updates the edges it's connected to", "[allocator]")
+TEST_CASE( "deleting an entity automatically updates the edges it's connected to", "[Allocator]")
 {
    trecs::Allocator allocator;
    allocator.registerComponent<float>();
@@ -159,7 +170,7 @@ TEST_CASE( "deleting an entity automatically updates the edges it's connected to
    REQUIRE(edge.flag == trecs::edge_flag_enum_t::NODE_A_TERMINAL);
 }
 
-TEST_CASE( "register rando systems", "[allocator]" )
+TEST_CASE( "register rando systems", "[Allocator]" )
 {
    trecs::Allocator allocator;
    SandoSystem * ss = allocator.registerSystem<SandoSystem>();
@@ -169,7 +180,7 @@ TEST_CASE( "register rando systems", "[allocator]" )
    REQUIRE( ns != nullptr );
 }
 
-TEST_CASE( "registering the same system twice fails", "[allocator]" )
+TEST_CASE( "registering the same system twice fails", "[Allocator]" )
 {
    trecs::Allocator allocator;
    SandoSystem * ss = allocator.registerSystem<SandoSystem>();
@@ -179,7 +190,7 @@ TEST_CASE( "registering the same system twice fails", "[allocator]" )
    REQUIRE( ss2 == nullptr );
 }
 
-TEST_CASE( "the allocator queries get the correct archetypes", "[allocator]" )
+TEST_CASE( "the allocator queries get the correct archetypes", "[Allocator]" )
 {
    trecs::Allocator allocator;
    SandoSystem * ss = allocator.registerSystem<SandoSystem>();
@@ -197,7 +208,7 @@ TEST_CASE( "the allocator queries get the correct archetypes", "[allocator]" )
    REQUIRE( allocator.getQueryEntities(rb_query).size() == 0 );
 }
 
-TEST_CASE( "systems get the correct entities", "[allocator]" )
+TEST_CASE( "systems get the correct entities", "[Allocator]" )
 {
    trecs::Allocator allocator;
    SandoSystem * ss = allocator.registerSystem<SandoSystem>();
@@ -242,7 +253,7 @@ TEST_CASE( "systems get the correct entities", "[allocator]" )
 
 // Verifies that attempting to add a query for unregistered components doesn't
 // crash the Allocator.
-TEST_CASE( "variadic query registration for unregistered components", "[allocator]" )
+TEST_CASE( "variadic query registration for unregistered components", "[Allocator]" )
 {
    trecs::Allocator allocator;
 
@@ -253,7 +264,7 @@ TEST_CASE( "variadic query registration for unregistered components", "[allocato
    REQUIRE( allocator.getQueryEntities(funky_query).size() == 0 );
 }
 
-TEST_CASE( "variadic query registration, component addition, component removal, and query retrieval for registered components", "[allocator]")
+TEST_CASE( "variadic query registration, component addition, component removal, and query retrieval for registered components", "[Allocator]")
 {
    trecs::Allocator allocator;
 
@@ -284,7 +295,7 @@ TEST_CASE( "variadic query registration, component addition, component removal, 
    REQUIRE( allocator.getQueryEntities(funky_query).size() == 0 );
 }
 
-TEST_CASE( "verify that adding and removing components changes query output", "[allocator]" )
+TEST_CASE( "verify that adding and removing components changes query output", "[Allocator]" )
 {
    trecs::Allocator allocator;
 
@@ -357,7 +368,7 @@ TEST_CASE( "verify that adding and removing components changes query output", "[
    REQUIRE( allocator.getQueryEntities(queries[3]).size() == 0 );
 }
 
-TEST_CASE( "verify adding the same archetype query multiple times results in the same query ID", "[allocator]" )
+TEST_CASE( "verify adding the same archetype query multiple times results in the same query ID", "[Allocator]" )
 {
    trecs::Allocator allocator;
 

@@ -154,8 +154,15 @@ namespace trecs
                return true;
             }
 
-            DefaultArchetype new_arch = entities_.getArchetype(entity_uid);
             signature_t component_sig = components_.getSignature<Component_T>();
+            if (component_sig == error_signature)
+            {
+               std::cout << "Couldn't add component to entity UID: " << entity_uid << "\n";
+               std::cout << "\tComponent type " << typeid(Component_T).name() << " isn't registered\n";
+               return false;
+            }
+
+            DefaultArchetype new_arch = entities_.getArchetype(entity_uid);
             new_arch.mergeSignature(component_sig);
 
             entities_.setArchetype(entity_uid, new_arch);

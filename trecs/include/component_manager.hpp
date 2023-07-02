@@ -73,9 +73,10 @@ namespace trecs
             return wrapper;
          }
 
-         // Adds a particular component type with a particular component UID.
+         // Attempts to add a component with a particular component UID.
+         // Returns 'new_component_uid' if successful, returns -1 otherwise.
          template <typename Component_T>
-         int addComponent(
+         uid_t addComponent(
             uid_t new_component_uid,
             const Component_T & component
          )
@@ -89,7 +90,7 @@ namespace trecs
                return -1;
             }
 
-            int result = pool->addComponent(new_component_uid, component);
+            uid_t result = pool->addComponent(new_component_uid, component);
 
             return result;
          }

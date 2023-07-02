@@ -92,6 +92,8 @@ namespace trecs
             uid_to_index_.clear();
          }
 
+         // Returns 'new_component_uid' if the component is successfully added
+         // to the data pool. Returns -1 otherwise.
          uid_t addComponent(uid_t new_component_uid, const Object_T & component)
          {
             if (size() >= max_num_elements_)

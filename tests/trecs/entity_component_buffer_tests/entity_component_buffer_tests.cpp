@@ -57,6 +57,15 @@ TEST_CASE( "add one entity", "[EntityComponentBuffer]" )
    REQUIRE( ecb.addEntity() >= 0 );
 }
 
+TEST_CASE( "can't add unregistered component types", "[EntityComponentBuffer]" )
+{
+   trecs::EntityComponentBuffer<256> ecb;
+   ecb.registerComponent<float>();
+   
+   auto new_entity = ecb.addEntity();
+   REQUIRE( !ecb.updateComponent(new_entity, 'a') );
+}
+
 // Verifies that the ECB returns entities >= 0 while the entity count is
 // below the maximum number of entities.
 TEST_CASE( "add more than the maximum number of entities", "[EntityComponentBuffer]" )
