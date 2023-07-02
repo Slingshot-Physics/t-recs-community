@@ -118,17 +118,21 @@ class Integrator : public trecs::System
 
          for (const auto entity : point_mass_entities)
          {
+            vel_t & vel = *velocities[entity];
+            acc_t & acc = *accelerations[entity];
             for (int i = 0; i < 3; ++i)
             {
-               velocities[entity]->vec[i] += accelerations[entity]->vec[i] * dt_;
+               vel.vec[i] += acc.vec[i] * dt_;
             }
          }
 
          for (const auto entity : point_mass_entities)
          {
+            pos_t & pos = *positions[entity];
+            vel_t & vel = *velocities[entity];
             for (int i = 0; i < 3; ++i)
             {
-               positions[entity]->vec[i] += velocities[entity]->vec[i] * dt_;
+               pos.vec[i] += vel.vec[i] * dt_;
             }
          }
       }

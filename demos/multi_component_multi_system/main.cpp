@@ -146,21 +146,28 @@ class ForceCalculator : public trecs::System
 
          for (const auto & force_entity : force_entities)
          {
+            spring_damper_t & force = *forces[force_entity];
             auto body_a_entity = force_edges[force_entity]->nodeIdA;
             auto body_b_entity = force_edges[force_entity]->nodeIdB;
 
+            pos_t & pos_a = *positions[body_a_entity];
+            pos_t & pos_b = *positions[body_b_entity];
+
+            vel_t & vel_a = *velocities[body_a_entity];
+            vel_t & vel_b = *velocities[body_b_entity];
+
             float distance = sqrtf(
-               powf(positions[body_a_entity]->vec[0] - positions[body_b_entity]->vec[0], 2.f) +
-               powf(positions[body_a_entity]->vec[1] - positions[body_b_entity]->vec[1], 2.f) +
-               powf(positions[body_a_entity]->vec[2] - positions[body_b_entity]->vec[2], 2.f)
+               powf(pos_a.vec[0] - pos_b.vec[0], 2.f) +
+               powf(pos_a.vec[1] - pos_b.vec[1], 2.f) +
+               powf(pos_a.vec[2] - pos_b.vec[2], 2.f)
             );
 
             for (int i = 0; i < 3; ++i)
             {
-               float f_b_on_a = forces[force_entity]->k * (
-                  (positions[body_a_entity]->vec[i] - positions[body_b_entity]->vec[i]) / distance
-               ) + forces[force_entity]->c * (
-                  velocities[body_a_entity]->vec[i] - velocities[body_b_entity]->vec[i]
+               float f_b_on_a = force.k * (
+                  (pos_a.vec[i] - pos_b.vec[i]) / distance
+               ) + force.c * (
+                  vel_a.vec[i] - vel_b.vec[i]
                );
 
                accelerations[body_a_entity]->vec[i] = f_b_on_a;
@@ -199,17 +206,21 @@ class Integrator : public trecs::System
 
          for (const auto entity : point_mass_entities)
          {
+            vel_t & vel = *velocities[entity];
+            acc_t & acc = *accelerations[entity];
             for (int i = 0; i < 3; ++i)
             {
-               velocities[entity]->vec[i] += accelerations[entity]->vec[i] * dt_;
+               vel.vec[i] += acc.vec[i] * dt_;
             }
          }
 
          for (const auto entity : point_mass_entities)
          {
+            pos_t & pos = *positions[entity];
+            vel_t & vel = *velocities[entity];
             for (int i = 0; i < 3; ++i)
             {
-               positions[entity]->vec[i] += velocities[entity]->vec[i] * dt_;
+               pos.vec[i] += vel.vec[i] * dt_;
             }
          }
       }
