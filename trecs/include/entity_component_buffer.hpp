@@ -141,25 +141,25 @@ namespace trecs
                return false;
             }
 
-            DefaultArchetype old_arch = entities_.getArchetype(entity_uid);
-            signature_t component_sig = components_.getSignature<Component_T>();
+            Component_T * old_component = components_.getComponent<Component_T>(entity_uid);
 
-            if (old_arch.supports(component_sig))
+            // This is just as good as checking if an entity's current
+            // archetype supports a component signature. If the component
+            // attached to the entity is null, then that component hasn't been
+            // added to the entity, and the entity's archetype does't support
+            // the component's signature.
+            if (old_component != nullptr)
             {
-               Component_T * old_component = components_.getComponent<Component_T>(entity_uid);
-               if (old_component == nullptr)
-               {
-                  return false;
-               }
-
                *old_component = component;
                return true;
             }
 
-            DefaultArchetype new_arch = old_arch;
+            DefaultArchetype new_arch = entities_.getArchetype(entity_uid);
+            signature_t component_sig = components_.getSignature<Component_T>();
             new_arch.mergeSignature(component_sig);
-            components_.addComponent<Component_T>(entity_uid, component);
+
             entities_.setArchetype(entity_uid, new_arch);
+            components_.addComponent(entity_uid, component);
 
             return true;
          }

@@ -192,7 +192,7 @@ namespace trecs
          }
 
          // Returns the maximum number of components that can be held in this
-         // allocator.
+         // data pool.
          size_t capacity(void) const override
          {
             return max_num_elements_;
@@ -207,8 +207,7 @@ namespace trecs
          // inserted.
          size_t last_free_index_;
 
-         // The underlying data structure. Alignment across byte boundaries is
-         // enforced by casting subsets of bytes of this array to the type T.
+         // The underlying data structure.
          Object_T * data_pool_;
 
          // A conversion from UID to index.
