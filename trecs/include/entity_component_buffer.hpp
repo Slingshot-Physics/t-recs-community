@@ -13,27 +13,35 @@
 
 namespace trecs
 {
-   template <unsigned int BufferSize>
+
    class EntityComponentBuffer
    {
       public:
+
          EntityComponentBuffer(void)
-            : entities_(BufferSize)
-            , components_(BufferSize)
+            : max_buffer_size_(0)
+            , entities_(max_buffer_size_)
+            , components_(max_buffer_size_)
+            , registration_locked_(false)
+         { }
+      
+         EntityComponentBuffer(size_t max_buffer_size)
+            : max_buffer_size_(max_buffer_size)
+            , entities_(max_buffer_size_)
+            , components_(max_buffer_size_)
             , registration_locked_(false)
          { }
 
          // Copies the source ECB into this destination ECB without releasing
-         // the source ECB's ownership of its allocators.
-         EntityComponentBuffer<BufferSize> & operator=(
-            const EntityComponentBuffer<BufferSize> & other
-         )
+         // the source ECB's ownership of its data pools.
+         EntityComponentBuffer & operator=(const EntityComponentBuffer & other)
          {
             if (this == &other)
             {
                return *this;
             }
 
+            max_buffer_size_ = other.max_buffer_size_;
             entities_ = other.entities_;
             components_ = other.components_;
 
@@ -41,16 +49,15 @@ namespace trecs
          }
 
          // Copies the source ECB into this destination ECB and releases the
-         // source ECB's ownership of its allocators.
-         EntityComponentBuffer<BufferSize> & operator=(
-            EntityComponentBuffer<BufferSize> & other
-         )
+         // source ECB's ownership of its data pools.
+         EntityComponentBuffer & operator=(EntityComponentBuffer & other)
          {
             if (this == &other)
             {
                return *this;
             }
 
+            max_buffer_size_ = other.max_buffer_size_;
             entities_ = other.entities_;
             components_ = other.components_;
 
@@ -239,6 +246,8 @@ namespace trecs
          }
 
       private:
+         size_t max_buffer_size_;
+
          EntityManager entities_;
 
          ComponentManager components_;

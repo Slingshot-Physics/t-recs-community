@@ -63,7 +63,7 @@ namespace trecs
                return;
             }
 
-            allocators_[new_sig].reset(
+            data_pools_[new_sig].reset(
                new ExternalUidObjectPool<Component_T>(max_size_)
             );
          }
@@ -169,7 +169,7 @@ namespace trecs
          size_t max_size_;
 
          // This is a mapping of integer signature types to allocators.
-         std::vector<std::unique_ptr<IDataPool> > allocators_;
+         std::vector<std::unique_ptr<IDataPool> > data_pools_;
 
          SignatureManager<signature_t> signatures_;
 
@@ -206,13 +206,13 @@ namespace trecs
          {
             signature_t signature = getSignature<Component_T>();
 
-            if (signature >= allocators_.size())
+            if (signature >= data_pools_.size())
             {
                std::cout << "Couldn't find pool for signature " << static_cast<int>(signature) << "\n";
                return nullptr;
             }
 
-            IDataPool * pool_base = allocators_.at(signature).get();
+            IDataPool * pool_base = data_pools_.at(signature).get();
 
             if (pool_base == nullptr)
             {
@@ -230,13 +230,13 @@ namespace trecs
          {
             signature_t signature = getSignature<Component_T>();
 
-            if (signature >= allocators_.size())
+            if (signature >= data_pools_.size())
             {
                std::cout << "Couldn't find pool for signature " << signature << "\n";
                return nullptr;
             }
 
-            IDataPool * pool_base = allocators_.at(signature).get();
+            IDataPool * pool_base = data_pools_.at(signature).get();
 
             if (pool_base == nullptr)
             {

@@ -406,11 +406,11 @@ TEST_CASE( "add one entity component buffer", "[Allocator]" )
 {
    trecs::Allocator allocator;
 
-   trecs::uid_t ecb_entity = allocator.addEntityComponentBuffer<120>();
+   trecs::uid_t ecb_entity = allocator.addEntityComponentBuffer(120);
 
-   REQUIRE( allocator.getComponent<trecs::EntityComponentBuffer<120> >(ecb_entity) != nullptr );
+   REQUIRE( allocator.getComponent<trecs::EntityComponentBuffer>(ecb_entity) != nullptr );
 
-   allocator.getComponent<trecs::EntityComponentBuffer<120> >(ecb_entity)->registerComponents<int, float, double>();
+   allocator.getComponent<trecs::EntityComponentBuffer>(ecb_entity)->registerComponents<int, float, double>();
 }
 
 TEST_CASE( "add multiple entity component buffers", "[Allocator]" )
@@ -419,21 +419,21 @@ TEST_CASE( "add multiple entity component buffers", "[Allocator]" )
 
    std::vector<trecs::uid_t> ecb_entities;
 
-   ecb_entities.push_back(allocator.addEntityComponentBuffer<120>());
+   ecb_entities.push_back(allocator.addEntityComponentBuffer(120));
    std::cout << "added entity " << ecb_entities.back() << "\n";
-   ecb_entities.push_back(allocator.addEntityComponentBuffer<120>());
+   ecb_entities.push_back(allocator.addEntityComponentBuffer(120));
    std::cout << "added entity " << ecb_entities.back() << "\n";
-   ecb_entities.push_back(allocator.addEntityComponentBuffer<120>());
+   ecb_entities.push_back(allocator.addEntityComponentBuffer(120));
    std::cout << "added entity " << ecb_entities.back() << "\n";
-   ecb_entities.push_back(allocator.addEntityComponentBuffer<120>());
+   ecb_entities.push_back(allocator.addEntityComponentBuffer(120));
    std::cout << "added entity " << ecb_entities.back() << "\n";
-   ecb_entities.push_back(allocator.addEntityComponentBuffer<120>());
+   ecb_entities.push_back(allocator.addEntityComponentBuffer(120));
    std::cout << "added entity " << ecb_entities.back() << "\n";
 
    for (const auto entity : ecb_entities)
    {
       std::cout << "entity: " << entity << "\n";
-      REQUIRE( allocator.getComponent<trecs::EntityComponentBuffer<120> >(entity) != nullptr );
+      REQUIRE( allocator.getComponent<trecs::EntityComponentBuffer>(entity) != nullptr );
    }
 
    // SFINAE
@@ -444,9 +444,9 @@ TEST_CASE( "add components to entity component buffer", "[Allocator]" )
 {
    trecs::Allocator allocator;
 
-   trecs::uid_t ecb_entity = allocator.addEntityComponentBuffer<120>();
+   trecs::uid_t ecb_entity = allocator.addEntityComponentBuffer(120);
 
-   auto ecb = allocator.getComponent<trecs::EntityComponentBuffer<120> >(ecb_entity);
+   auto ecb = allocator.getComponent<trecs::EntityComponentBuffer>(ecb_entity);
    ecb->registerComponents<int, float, double>();
 
    std::vector<trecs::uid_t> entities;
@@ -478,9 +478,9 @@ TEST_CASE( "add components to entity component buffer, delete entity", "[Allocat
 {
    trecs::Allocator allocator;
 
-   trecs::uid_t ecb_entity = allocator.addEntityComponentBuffer<120>();
+   trecs::uid_t ecb_entity = allocator.addEntityComponentBuffer(120);
 
-   auto ecb = allocator.getComponent<trecs::EntityComponentBuffer<120> >(ecb_entity);
+   auto ecb = allocator.getComponent<trecs::EntityComponentBuffer>(ecb_entity);
    ecb->registerComponents<int, float, double>();
 
    std::vector<trecs::uid_t> entities;
@@ -517,7 +517,7 @@ TEST_CASE( "add components to entity component buffer, delete entity", "[Allocat
 TEST_CASE( "deny manually adding ECB", "[Allocator]")
 {
    trecs::Allocator allocator;
-   trecs::EntityComponentBuffer<120> ecb;
+   trecs::EntityComponentBuffer ecb(120);
 
    REQUIRE( !allocator.addComponent(allocator.addEntity(), ecb) );
 }

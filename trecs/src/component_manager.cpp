@@ -4,7 +4,7 @@ namespace trecs
 {
    ComponentManager::ComponentManager(size_t max_size)
       : max_size_(max_size)
-      , allocators_(max_num_signatures)
+      , data_pools_(max_num_signatures)
    { }
 
    // Moves ownership of the allocator buffers from the source ComponentManager
@@ -23,25 +23,25 @@ namespace trecs
       signatures_ = other.signatures_;
 
       // Free all of the underlying data.
-      for (auto & allocator : allocators_)
+      for (auto & allocator : data_pools_)
       {
          allocator.reset(nullptr);
       }
 
       // Delete all of the existing allocator pointers.
-      allocators_.clear();
+      data_pools_.clear();
 
       // Re-append null pointers to the allocator pointers.
       for (unsigned int i = 0; i < max_num_signatures; ++i)
       {
-         allocators_.push_back(nullptr);
+         data_pools_.push_back(nullptr);
       }
 
-      for (unsigned int i = 0; i < other.allocators_.size(); ++i)
+      for (unsigned int i = 0; i < other.data_pools_.size(); ++i)
       {
-         if (other.allocators_[i].get() != nullptr)
+         if (other.data_pools_[i].get() != nullptr)
          {
-            allocators_[i].reset(other.allocators_[i].release());
+            data_pools_[i].reset(other.data_pools_[i].release());
          }
       }
 
@@ -65,25 +65,25 @@ namespace trecs
       signatures_ = other.signatures_;
 
       // Free all of the underlying data.
-      for (auto & allocator : allocators_)
+      for (auto & allocator : data_pools_)
       {
          allocator.reset(nullptr);
       }
 
       // Delete all of the existing allocator pointers.
-      allocators_.clear();
+      data_pools_.clear();
 
       // Re-append null pointers to the allocator pointers.
       for (unsigned int i = 0; i < max_num_signatures; ++i)
       {
-         allocators_.push_back(nullptr);
+         data_pools_.push_back(nullptr);
       }
 
-      for (unsigned int i = 0; i < other.allocators_.size(); ++i)
+      for (unsigned int i = 0; i < other.data_pools_.size(); ++i)
       {
-         if (other.allocators_[i].get() != nullptr)
+         if (other.data_pools_[i].get() != nullptr)
          {
-            allocators_[i].reset(other.allocators_[i].get());
+            data_pools_[i].reset(other.data_pools_[i].get());
          }
       }
 
@@ -92,7 +92,7 @@ namespace trecs
 
    void ComponentManager::clear(void)
    {
-      for (auto & allocator : allocators_)
+      for (auto & allocator : data_pools_)
       {
          if (allocator != nullptr)
          {
@@ -103,7 +103,7 @@ namespace trecs
 
    void ComponentManager::release(void)
    {
-      for (auto & allocator : allocators_)
+      for (auto & allocator : data_pools_)
       {
          if (allocator != nullptr)
          {
@@ -114,7 +114,7 @@ namespace trecs
 
    void ComponentManager::removeComponents(uid_t removed_components_uid)
    {
-      for (auto & alloc : allocators_)
+      for (auto & alloc : data_pools_)
       {
          if (alloc != nullptr)
          {

@@ -496,9 +496,9 @@ TEST_CASE(
 
 TEST_CASE( "add empty ECB as a component and add components to the ECB", "[ExternalUidObjectPool]" )
 {
-   trecs::ExternalUidObjectPool<trecs::EntityComponentBuffer<16> > pool(4);
+   trecs::ExternalUidObjectPool<trecs::EntityComponentBuffer> pool(4);
 
-   trecs::EntityComponentBuffer<16> temp_ecb;
+   trecs::EntityComponentBuffer temp_ecb(16);
    temp_ecb.registerComponent<complicatedType_t<73> >();
    temp_ecb.registerComponent<float>();
    temp_ecb.registerComponent<bigType_t>();
@@ -519,10 +519,10 @@ TEST_CASE( "add empty ECB as a component and add components to the ECB", "[Exter
 
 TEST_CASE( "add maximum number of ECB's as components", "[ExternalUidObjectPool]" )
 {
-   trecs::ExternalUidObjectPool<trecs::EntityComponentBuffer<16> > pool(4);
+   trecs::ExternalUidObjectPool<trecs::EntityComponentBuffer> pool(4);
 
    {
-      trecs::EntityComponentBuffer<16> temp_ecb;
+      trecs::EntityComponentBuffer temp_ecb(16);
       temp_ecb.registerComponent<complicatedType_t<73> >();
       temp_ecb.registerComponent<float>();
       temp_ecb.registerComponent<bigType_t>();
@@ -534,7 +534,7 @@ TEST_CASE( "add maximum number of ECB's as components", "[ExternalUidObjectPool]
    }
 
    {
-      trecs::EntityComponentBuffer<16> temp_ecb;
+      trecs::EntityComponentBuffer temp_ecb(16);
       temp_ecb.registerComponent<complicatedType_t<2> >();
       temp_ecb.registerComponent<int>();
       pool.addComponent(1, temp_ecb);
@@ -545,7 +545,7 @@ TEST_CASE( "add maximum number of ECB's as components", "[ExternalUidObjectPool]
    }
 
    {
-      trecs::EntityComponentBuffer<16> temp_ecb;
+      trecs::EntityComponentBuffer temp_ecb(16);
       temp_ecb.registerComponent<trecs::edge_t>();
       temp_ecb.registerComponent<complicatedType_t<17> >();
       temp_ecb.registerComponent<unsigned int>();
@@ -559,7 +559,7 @@ TEST_CASE( "add maximum number of ECB's as components", "[ExternalUidObjectPool]
    }
 
    {
-      trecs::EntityComponentBuffer<16> temp_ecb;
+      trecs::EntityComponentBuffer temp_ecb(16);
       temp_ecb.registerComponent<complicatedType_t<17> >();
       temp_ecb.registerComponent<unsigned int>();
       temp_ecb.registerComponent<float>();
@@ -573,7 +573,7 @@ TEST_CASE( "add maximum number of ECB's as components", "[ExternalUidObjectPool]
    REQUIRE( pool.size() == 4 );
 
    {
-      trecs::EntityComponentBuffer<16> temp_ecb;
+      trecs::EntityComponentBuffer temp_ecb(16);
       temp_ecb.registerComponent<complicatedType_t<22> >();
       temp_ecb.registerComponent<unsigned int>();
       temp_ecb.registerComponent<float>();
@@ -585,9 +585,9 @@ TEST_CASE( "add maximum number of ECB's as components", "[ExternalUidObjectPool]
 
 TEST_CASE( "add non-empty ECB as a component and add components to the ECB", "[ExternalUidObjectPool]" )
 {
-   trecs::ExternalUidObjectPool<trecs::EntityComponentBuffer<16> > pool(4);
+   trecs::ExternalUidObjectPool<trecs::EntityComponentBuffer> pool(4);
 
-   trecs::EntityComponentBuffer<16> temp_ecb;
+   trecs::EntityComponentBuffer temp_ecb(16);
    temp_ecb.registerComponent<complicatedType_t<73> >();
    temp_ecb.registerComponent<float>();
    temp_ecb.registerComponent<bigType_t>();

@@ -55,8 +55,7 @@ namespace trecs
             return components_.getSignature<Component_T>();
          }
 
-         template <unsigned int BufferSize>
-         bool addComponent(uid_t entity_uid, const EntityComponentBuffer<BufferSize> & ecb)
+         bool addComponent(uid_t entity_uid, const EntityComponentBuffer & ecb)
          {
             (void)entity_uid;
             (void)ecb;
@@ -240,13 +239,12 @@ namespace trecs
             components_.registerComponent<Component_T>();
          }
 
-         template <unsigned int BufferSize>
-         uid_t addEntityComponentBuffer(void)
+         uid_t addEntityComponentBuffer(size_t max_buffer_size)
          {
-            registerComponent<EntityComponentBuffer<BufferSize> >();
+            registerComponent<EntityComponentBuffer>();
 
             uid_t ecb_entity = addEntity();
-            EntityComponentBuffer<BufferSize> temp_ecb;
+            EntityComponentBuffer temp_ecb(max_buffer_size);
 
             if (!updateComponent(ecb_entity, temp_ecb))
             {
@@ -259,10 +257,9 @@ namespace trecs
             return ecb_entity;
          }
 
-         template <unsigned int BufferSize>
-         EntityComponentBuffer<BufferSize> * getEntityComponentBuffer(uid_t entity)
+         EntityComponentBuffer * getEntityComponentBuffer(uid_t entity)
          {
-            return getComponent<EntityComponentBuffer<BufferSize> >(entity);
+            return getComponent<EntityComponentBuffer>(entity);
          }
 
          template <typename System_T>

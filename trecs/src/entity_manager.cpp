@@ -14,7 +14,7 @@ namespace trecs
       )
       , archetypes_(max_entity_uid_, DefaultArchetype())
    {
-      assert(max_entity_uid_ > 0);
+      assert(max_entity_uid_ >= 0);
 
       if (max_entity_uid >= meta_max_entity_uid_)
       {

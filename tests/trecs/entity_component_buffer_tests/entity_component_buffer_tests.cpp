@@ -9,19 +9,19 @@
 #include <map>
 #include <vector>
 
-template <unsigned int BufferSize>
+// template <unsigned int BufferSize>
 void artificial_copy_from_const(
-   trecs::EntityComponentBuffer<BufferSize> & dest,
-   const trecs::EntityComponentBuffer<BufferSize> & src
+   trecs::EntityComponentBuffer & dest,
+   const trecs::EntityComponentBuffer & src
 )
 {
    dest = src;
 }
 
-template <unsigned int BufferSize>
+// template <unsigned int BufferSize>
 void artificial_copy(
-   trecs::EntityComponentBuffer<BufferSize> & dest,
-   trecs::EntityComponentBuffer<BufferSize> & src
+   trecs::EntityComponentBuffer & dest,
+   trecs::EntityComponentBuffer & src
 )
 {
    dest = src;
@@ -29,14 +29,14 @@ void artificial_copy(
 
 TEST_CASE( "instantiation", "[EntityComponentBuffer]" )
 {
-   trecs::EntityComponentBuffer<256> ecb;
+   trecs::EntityComponentBuffer ecb(256);
 }
 
 // Verifies that an ECB with some set of registered component types correctly
 // reports that it supports some user requested typelist.
 TEST_CASE( "correctly reports supported types", "[EntityComponentBuffer]" )
 {
-   trecs::EntityComponentBuffer<256> ecb;
+   trecs::EntityComponentBuffer ecb(256);
    ecb.registerComponent<int>();
    ecb.registerComponent<float>();
 
@@ -53,13 +53,13 @@ TEST_CASE( "correctly reports supported types", "[EntityComponentBuffer]" )
 
 TEST_CASE( "add one entity", "[EntityComponentBuffer]" )
 {
-   trecs::EntityComponentBuffer<256> ecb;
+   trecs::EntityComponentBuffer ecb(256);
    REQUIRE( ecb.addEntity() >= 0 );
 }
 
 TEST_CASE( "can't add unregistered component types", "[EntityComponentBuffer]" )
 {
-   trecs::EntityComponentBuffer<256> ecb;
+   trecs::EntityComponentBuffer ecb(256);
    ecb.registerComponent<float>();
    
    auto new_entity = ecb.addEntity();
@@ -71,7 +71,7 @@ TEST_CASE( "can't add unregistered component types", "[EntityComponentBuffer]" )
 TEST_CASE( "add more than the maximum number of entities", "[EntityComponentBuffer]" )
 {
    const size_t max_size = 256;
-   trecs::EntityComponentBuffer<max_size> ecb;
+   trecs::EntityComponentBuffer ecb(max_size);
    
    for (unsigned int i = 0; i < 5 * max_size; ++i)
    {
@@ -92,7 +92,7 @@ TEST_CASE( "add more than the maximum number of entities", "[EntityComponentBuff
 TEST_CASE( "add more than the maximum number of entities, delete them all", "[EntityComponentBuffer]" )
 {
    const size_t max_size = 256;
-   trecs::EntityComponentBuffer<max_size> ecb;
+   trecs::EntityComponentBuffer ecb(max_size);
 
    std::vector<trecs::uid_t> entities;
 
@@ -128,7 +128,7 @@ TEST_CASE( "components on an entity can be updated", "[EntityComponentBuffer]" )
    comp_a.float_field = 3.14f;
    comp_a.int_field = -3;
 
-   trecs::EntityComponentBuffer<256> ecb;
+   trecs::EntityComponentBuffer ecb(256);
    ecb.registerComponent<complicatedType_t<0> >();
 
    REQUIRE( ecb.getComponentEntities<complicatedType_t<0> >().size() == 0 );
@@ -150,7 +150,7 @@ TEST_CASE( "components on an entity can be updated", "[EntityComponentBuffer]" )
 
 TEST_CASE( "an entity's components can be updated and removed", "[EntityComponentBuffer]" )
 {
-   trecs::EntityComponentBuffer<256> ecb;
+   trecs::EntityComponentBuffer ecb(256);
    ecb.registerComponent<complicatedType_t<0> >();
    ecb.registerComponent<int>();
    ecb.registerComponent<float>();
@@ -180,7 +180,7 @@ TEST_CASE( "an entity's components can be updated and removed", "[EntityComponen
 
 TEST_CASE( "no harm, no foul removing an unregistered component", "[EntityComponentBuffer]" )
 {
-   trecs::EntityComponentBuffer<256> ecb;
+   trecs::EntityComponentBuffer ecb(256);
    ecb.registerComponent<complicatedType_t<0> >();
    ecb.registerComponent<int>();
    ecb.registerComponent<float>();
@@ -194,7 +194,7 @@ TEST_CASE( "no harm, no foul removing an unregistered component", "[EntityCompon
 
 TEST_CASE( "no harm, no foul removing a non-existent component", "[EntityComponentBuffer]" )
 {
-   trecs::EntityComponentBuffer<256> ecb;
+   trecs::EntityComponentBuffer ecb(256);
    ecb.registerComponent<complicatedType_t<0> >();
    ecb.registerComponent<int>();
    ecb.registerComponent<float>();
@@ -212,7 +212,7 @@ TEST_CASE( "components can be updated on one entity", "[EntityComponentBuffer]" 
    comp_a.float_field = 1.f;
    comp_a.int_field = 0;
 
-   trecs::EntityComponentBuffer<256> ecb;
+   trecs::EntityComponentBuffer ecb(256);
    ecb.registerComponent<complicatedType_t<0> >();
 
    REQUIRE( ecb.getComponentEntities<complicatedType_t<0> >().size() == 0 );
@@ -234,7 +234,7 @@ TEST_CASE( "can't add components to inactive entity", "[EntityComponentBuffer]" 
    comp_a.float_field = 1.f;
    comp_a.int_field = 0;
 
-   trecs::EntityComponentBuffer<256> ecb;
+   trecs::EntityComponentBuffer ecb(256);
    ecb.registerComponent<complicatedType_t<0> >();
 
    REQUIRE( !ecb.updateComponent(0, comp_a));
@@ -252,7 +252,7 @@ TEST_CASE( "can't add components to inactive entity", "[EntityComponentBuffer]" 
 
 TEST_CASE( "get component entities", "[EntityComponentBuffer]" )
 {
-   trecs::EntityComponentBuffer<256> ecb;
+   trecs::EntityComponentBuffer ecb(256);
    ecb.registerComponent<complicatedType_t<0> >();
    ecb.registerComponent<int>();
    ecb.registerComponent<float>();
@@ -290,7 +290,7 @@ TEST_CASE( "get component entities", "[EntityComponentBuffer]" )
 
 TEST_CASE( "get a component array wrapper", "[EntityComponentBuffer]" )
 {
-   trecs::EntityComponentBuffer<256> ecb;
+   trecs::EntityComponentBuffer ecb(256);
    ecb.registerComponent<complicatedType_t<0> >();
    ecb.registerComponent<int>();
    ecb.registerComponent<float>();
@@ -365,7 +365,7 @@ TEST_CASE( "get a component array wrapper", "[EntityComponentBuffer]" )
 TEST_CASE( "add more than allocated components, then delete them all", "[EntityComponentBuffer]" )
 {
    const size_t max_size = 256;
-   trecs::EntityComponentBuffer<max_size> ecb;
+   trecs::EntityComponentBuffer ecb(max_size);
    ecb.registerComponent<complicatedType_t<0> >();
    ecb.registerComponent<int>();
    ecb.registerComponent<float>();
@@ -419,7 +419,7 @@ TEST_CASE( "add more than allocated components, then delete them all", "[EntityC
 TEST_CASE( "register multiple components at once", "[EntityComponentBuffer]" )
 {
    const size_t max_size = 256;
-   trecs::EntityComponentBuffer<max_size> ecb;
+   trecs::EntityComponentBuffer ecb(max_size);
 
    ecb.registerComponents<complicatedType_t<0>, int, float >();
 
@@ -442,12 +442,12 @@ TEST_CASE( "register multiple components at once", "[EntityComponentBuffer]" )
 TEST_CASE( "assignment operator empty to empty", "[EntityComponentBuffer]" )
 {
    const size_t max_size = 256;
-   trecs::EntityComponentBuffer<max_size> ecb1;
+   trecs::EntityComponentBuffer ecb1(max_size);
    ecb1.registerComponent<complicatedType_t<0> >();
    ecb1.registerComponent<int>();
    ecb1.registerComponent<float>();
 
-   trecs::EntityComponentBuffer<max_size> ecb2;
+   trecs::EntityComponentBuffer ecb2(max_size);
 
    auto num_signatures = ecb1.numSignatures();
 
@@ -460,7 +460,7 @@ TEST_CASE( "assignment operator empty to empty", "[EntityComponentBuffer]" )
 TEST_CASE( "assignment operator non-empty to empty", "[EntityComponentBuffer]" )
 {
    const size_t max_size = 256;
-   trecs::EntityComponentBuffer<max_size> ecb1;
+   trecs::EntityComponentBuffer ecb1(max_size);
    ecb1.registerComponent<complicatedType_t<0> >();
    ecb1.registerComponent<int>();
    ecb1.registerComponent<float>();
@@ -501,7 +501,7 @@ TEST_CASE( "assignment operator non-empty to empty", "[EntityComponentBuffer]" )
       ecb1.updateComponent(entity_ct.first, entity_ct.second);
    }
 
-   trecs::EntityComponentBuffer<max_size> ecb2;
+   trecs::EntityComponentBuffer ecb2(max_size);
 
    auto num_signatures = ecb1.numSignatures();
 
@@ -531,7 +531,7 @@ TEST_CASE( "assignment operator non-empty to empty", "[EntityComponentBuffer]" )
 TEST_CASE( "assignment operator non-empty to non-empty", "[EntityComponentBuffer]" )
 {
    const size_t max_size = 256;
-   trecs::EntityComponentBuffer<max_size> ecb1;
+   trecs::EntityComponentBuffer ecb1(max_size);
    ecb1.registerComponent<complicatedType_t<0> >();
    ecb1.registerComponent<int>();
    ecb1.registerComponent<float>();
@@ -572,7 +572,7 @@ TEST_CASE( "assignment operator non-empty to non-empty", "[EntityComponentBuffer
       ecb1.updateComponent(entity_ct.first, entity_ct.second);
    }
 
-   trecs::EntityComponentBuffer<max_size> ecb2;
+   trecs::EntityComponentBuffer ecb2(max_size);
 
    ecb2.registerComponent<double>();
    ecb2.registerComponent<unsigned char>();
@@ -611,7 +611,7 @@ TEST_CASE( "assignment operator non-empty to non-empty", "[EntityComponentBuffer
 TEST_CASE( "assignment operator const non-empty to non-empty", "[EntityComponentBuffer]" )
 {
    const size_t max_size = 256;
-   trecs::EntityComponentBuffer<max_size> ecb1;
+   trecs::EntityComponentBuffer ecb1(max_size);
    ecb1.registerComponent<complicatedType_t<0> >();
    ecb1.registerComponent<int>();
    ecb1.registerComponent<float>();
@@ -652,7 +652,7 @@ TEST_CASE( "assignment operator const non-empty to non-empty", "[EntityComponent
       ecb1.updateComponent(entity_ct.first, entity_ct.second);
    }
 
-   trecs::EntityComponentBuffer<max_size> ecb2;
+   trecs::EntityComponentBuffer ecb2(max_size);
 
    ecb2.registerComponent<double>();
    ecb2.registerComponent<unsigned char>();
@@ -692,7 +692,7 @@ TEST_CASE( "assignment operator const non-empty to non-empty", "[EntityComponent
 TEST_CASE( "assignment operator const non-empty to empty", "[EntityComponentBuffer]" )
 {
    const size_t max_size = 256;
-   trecs::EntityComponentBuffer<max_size> ecb1;
+   trecs::EntityComponentBuffer ecb1(max_size);
    ecb1.registerComponent<complicatedType_t<0> >();
    ecb1.registerComponent<int>();
    ecb1.registerComponent<float>();
@@ -733,7 +733,7 @@ TEST_CASE( "assignment operator const non-empty to empty", "[EntityComponentBuff
       ecb1.updateComponent(entity_ct.first, entity_ct.second);
    }
 
-   trecs::EntityComponentBuffer<max_size> ecb2;
+   trecs::EntityComponentBuffer ecb2(max_size);
 
    auto num_signatures = ecb1.numSignatures();
 
@@ -764,7 +764,7 @@ TEST_CASE( "assignment operator const non-empty to empty", "[EntityComponentBuff
 TEST_CASE( "verify that the registration lock works", "[EntityComponentBuffer]")
 {
    const size_t max_size = 256;
-   trecs::EntityComponentBuffer<max_size> ecb1;
+   trecs::EntityComponentBuffer ecb1(max_size);
    ecb1.registerComponent<complicatedType_t<0> >();
    ecb1.registerComponent<int>();
    ecb1.registerComponent<float>();
@@ -785,7 +785,7 @@ TEST_CASE( "verify that the registration lock works", "[EntityComponentBuffer]")
 TEST_CASE( "clear empty ECB", "[EntityComponentBuffer]" )
 {
    const size_t max_size = 256;
-   trecs::EntityComponentBuffer<max_size> ecb;
+   trecs::EntityComponentBuffer ecb(max_size);
    ecb.registerComponent<complicatedType_t<0> >();
    ecb.registerComponent<int>();
    ecb.registerComponent<float>();
@@ -813,7 +813,7 @@ TEST_CASE( "clear empty ECB", "[EntityComponentBuffer]" )
 TEST_CASE( "clear partially-filled ECB", "[EntityComponentBuffer]" )
 {
    const size_t max_size = 256;
-   trecs::EntityComponentBuffer<max_size> ecb;
+   trecs::EntityComponentBuffer ecb(max_size);
    ecb.registerComponent<complicatedType_t<0> >();
    ecb.registerComponent<int>();
    ecb.registerComponent<float>();
@@ -870,7 +870,7 @@ TEST_CASE( "clear partially-filled ECB", "[EntityComponentBuffer]" )
 TEST_CASE( "clear full ECB", "[EntityComponentBuffer]" )
 {
    const size_t max_size = 256;
-   trecs::EntityComponentBuffer<max_size> ecb;
+   trecs::EntityComponentBuffer ecb(max_size);
    ecb.registerComponent<complicatedType_t<0> >();
    ecb.registerComponent<int>();
    ecb.registerComponent<float>();
