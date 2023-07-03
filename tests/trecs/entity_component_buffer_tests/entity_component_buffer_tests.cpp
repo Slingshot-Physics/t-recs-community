@@ -779,3 +779,147 @@ TEST_CASE( "verify that the registration lock works", "[EntityComponentBuffer]")
    REQUIRE( ecb1.supportsComponents<int, float, complicatedType_t<0> >() );
    REQUIRE( !ecb1.supportsComponents<unsigned char>() );
 }
+
+// Verify that clearing an empty ECB doesn't change the number of registered
+// components and that new entities and components can be added to the ECB.
+TEST_CASE( "clear empty ECB", "[EntityComponentBuffer]" )
+{
+   const size_t max_size = 256;
+   trecs::EntityComponentBuffer<max_size> ecb;
+   ecb.registerComponent<complicatedType_t<0> >();
+   ecb.registerComponent<int>();
+   ecb.registerComponent<float>();
+
+   REQUIRE( ecb.numEntities() == 0 );
+   REQUIRE( ecb.numSignatures() == 3 );
+
+   ecb.clear();
+
+   REQUIRE( ecb.numEntities() == 0 );
+   REQUIRE( ecb.numSignatures() == 3 );
+
+   auto new_entity = ecb.addEntity();
+
+   ecb.updateComponent(new_entity, 3.5f);
+   ecb.updateComponent(new_entity, 123456);
+   ecb.updateComponent(new_entity, complicatedType_t<0>{99, -99.3f});
+
+   REQUIRE( ecb.numEntities() == 1 );
+   REQUIRE( *ecb.getComponent<float>(new_entity) == 3.5f );
+   REQUIRE( *ecb.getComponent<int>(new_entity) == 123456 );
+   REQUIRE( *ecb.getComponent<complicatedType_t<0> >(new_entity) == complicatedType_t<0>{99, -99.3f} );
+}
+
+TEST_CASE( "clear partially-filled ECB", "[EntityComponentBuffer]" )
+{
+   const size_t max_size = 256;
+   trecs::EntityComponentBuffer<max_size> ecb;
+   ecb.registerComponent<complicatedType_t<0> >();
+   ecb.registerComponent<int>();
+   ecb.registerComponent<float>();
+
+   std::vector<trecs::uid_t> entities;
+
+   for (int i = 0; i < 100; ++i)
+   {
+      entities.push_back(ecb.addEntity());
+   }
+
+   std::map<trecs::uid_t, int> entity_ints;
+   std::map<trecs::uid_t, float> entity_floats;
+   std::map<trecs::uid_t, complicatedType_t<0> > entity_cts;
+
+   int i = 0;
+   for (const auto entity : entities)
+   {
+      entity_ints[entity] = ((i % 2) ? -1 : 1) * 3 * i;
+      entity_floats[entity] = ((i % 2) ? 1 : -1) * 5.f * static_cast<float>(i);
+      entity_cts[entity].int_field = i - entities.size() / 2;
+      entity_cts[entity].float_field = ((i % 3) ? 1 : -1) * 4.4f * static_cast<float>(i);
+      ++i;
+   }
+
+   for (const auto entity_int : entity_ints)
+   {
+      ecb.updateComponent(entity_int.first, entity_int.second);
+   }
+
+   for (const auto entity_float : entity_floats)
+   {
+      ecb.updateComponent(entity_float.first, entity_float.second);
+   }
+
+   for (const auto entity_ct : entity_cts)
+   {
+      ecb.updateComponent(entity_ct.first, entity_ct.second);
+   }
+
+   REQUIRE( ecb.numEntities() == 100 );
+   REQUIRE( ecb.getComponentEntities<float>().size() == entity_floats.size() );
+   REQUIRE( ecb.getComponentEntities<int>().size() == entity_ints.size() );
+   REQUIRE( ecb.getComponentEntities<complicatedType_t<0> >().size() == entity_cts.size() );
+
+   ecb.clear();
+
+   REQUIRE( ecb.numEntities() == 0 );
+   REQUIRE( ecb.getComponentEntities<float>().size() == 0 );
+   REQUIRE( ecb.getComponentEntities<int>().size() == 0 );
+   REQUIRE( ecb.getComponentEntities<complicatedType_t<0> >().size() == 0 );
+}
+
+TEST_CASE( "clear full ECB", "[EntityComponentBuffer]" )
+{
+   const size_t max_size = 256;
+   trecs::EntityComponentBuffer<max_size> ecb;
+   ecb.registerComponent<complicatedType_t<0> >();
+   ecb.registerComponent<int>();
+   ecb.registerComponent<float>();
+
+   std::vector<trecs::uid_t> entities;
+
+   for (int i = 0; i < max_size; ++i)
+   {
+      entities.push_back(ecb.addEntity());
+   }
+
+   std::map<trecs::uid_t, int> entity_ints;
+   std::map<trecs::uid_t, float> entity_floats;
+   std::map<trecs::uid_t, complicatedType_t<0> > entity_cts;
+
+   int i = 0;
+   for (const auto entity : entities)
+   {
+      entity_ints[entity] = ((i % 2) ? -1 : 1) * 3 * i;
+      entity_floats[entity] = ((i % 2) ? 1 : -1) * 5.f * static_cast<float>(i);
+      entity_cts[entity].int_field = i - entities.size() / 2;
+      entity_cts[entity].float_field = ((i % 3) ? 1 : -1) * 4.4f * static_cast<float>(i);
+      ++i;
+   }
+
+   for (const auto entity_int : entity_ints)
+   {
+      ecb.updateComponent(entity_int.first, entity_int.second);
+   }
+
+   for (const auto entity_float : entity_floats)
+   {
+      ecb.updateComponent(entity_float.first, entity_float.second);
+   }
+
+   for (const auto entity_ct : entity_cts)
+   {
+      ecb.updateComponent(entity_ct.first, entity_ct.second);
+   }
+
+   REQUIRE( ecb.numEntities() == max_size );
+   REQUIRE( ecb.getComponentEntities<float>().size() == entity_floats.size() );
+   REQUIRE( ecb.getComponentEntities<int>().size() == entity_ints.size() );
+   REQUIRE( ecb.getComponentEntities<complicatedType_t<0> >().size() == entity_cts.size() );
+
+   ecb.clear();
+
+   REQUIRE( ecb.numEntities() == 0 );
+   REQUIRE( ecb.getComponentEntities<float>().size() == 0 );
+   REQUIRE( ecb.getComponentEntities<int>().size() == 0 );
+   REQUIRE( ecb.getComponentEntities<complicatedType_t<0> >().size() == 0 );
+}

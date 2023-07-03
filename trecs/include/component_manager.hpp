@@ -34,6 +34,10 @@ namespace trecs
 
          ComponentManager & operator=(ComponentManager & other);
  
+         // Resets all of the data pools back to zero elements. Does not
+         // release any data.
+         void clear(void);
+
          // Releases the ownership of the pool allocators. This should only be
          // called if the source object has been assigned to some other
          // destination object.

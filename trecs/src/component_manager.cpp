@@ -90,6 +90,17 @@ namespace trecs
       return *this;
    }
 
+   void ComponentManager::clear(void)
+   {
+      for (auto & allocator : allocators_)
+      {
+         if (allocator != nullptr)
+         {
+            allocator->clear();
+         }
+      }
+   }
+
    void ComponentManager::release(void)
    {
       for (auto & allocator : allocators_)
@@ -112,6 +123,7 @@ namespace trecs
       }
    }
 
+   // Returns the number of registered component signatures.
    size_t ComponentManager::getNumSignatures(void) const
    {
       return signatures_.size();

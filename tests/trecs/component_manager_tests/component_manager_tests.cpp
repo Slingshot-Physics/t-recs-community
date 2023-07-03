@@ -1639,3 +1639,91 @@ TEST_CASE( "assignment to unconstructed CM", "[ComponentManager]" )
       REQUIRE( byte_cm->getComponent<complicatedType_t<24> >(i)->float_field == -1234.32456f );
    }
 }
+
+TEST_CASE( "clear empty component manager", "[ComponentManager]" )
+{
+   trecs::ComponentManager cman(120);
+   cman.registerComponent<complicatedType_t<26> >();
+   cman.registerComponent<complicatedType_t<34> >();
+   cman.registerComponent<float>();
+   cman.registerComponent<int>();
+
+   REQUIRE( cman.getNumComponents<float>() == 0 );
+   REQUIRE( cman.getNumComponents<int>() == 0 );
+   REQUIRE( cman.getNumComponents<complicatedType_t<26> >() == 0 );
+   REQUIRE( cman.getNumComponents<complicatedType_t<34> >() == 0 );
+
+   cman.clear();
+
+   REQUIRE( cman.getNumComponents<float>() == 0 );
+   REQUIRE( cman.getNumComponents<int>() == 0 );
+   REQUIRE( cman.getNumComponents<complicatedType_t<26> >() == 0 );
+   REQUIRE( cman.getNumComponents<complicatedType_t<34> >() == 0 );
+}
+
+TEST_CASE( "clear partially filled component manager", "[ComponentManager]" )
+{
+   trecs::ComponentManager cman(120);
+   cman.registerComponent<complicatedType_t<26> >();
+   cman.registerComponent<complicatedType_t<34> >();
+   cman.registerComponent<float>();
+   cman.registerComponent<int>();
+
+   std::vector<int> its;
+   its.push_back(2);
+   its.push_back(4);
+   its.push_back(8);
+   its.push_back(16);
+   its.push_back(32);
+
+   // Add five int types to unique entities in the component manager.
+   cman.addComponent(0, its[0]);
+   cman.addComponent(1, its[1]);
+   cman.addComponent(2, its[2]);
+   cman.addComponent(3, its[3]);
+   cman.addComponent(4, its[4]);
+
+   std::vector<float> fts;
+   fts.push_back(4.5f);
+   fts.push_back(-4.5f);
+   fts.push_back(-4.5f);
+
+   // Add three float types to unique entities in the component manager.
+   cman.addComponent(1, fts[0]);
+   cman.addComponent(3, fts[1]);
+   cman.addComponent(5, fts[2]);
+
+   std::vector<complicatedType_t<26> > cts;
+   cts.push_back(complicatedType_t<26>{1, -2.f});
+   cts.push_back(complicatedType_t<26>{1, 12.f});
+   cts.push_back(complicatedType_t<26>{2, -4.f});
+   cts.push_back(complicatedType_t<26>{3, 22.f});
+   cts.push_back(complicatedType_t<26>{5, -7.3f});
+   cts.push_back(complicatedType_t<26>{8, -9.f});
+   cts.push_back(complicatedType_t<26>{13, -11.f});
+
+   // Add seven complicated type <26> types to unique entities.
+   cman.addComponent(33, cts[0]);
+   cman.addComponent(34, cts[1]);
+   cman.addComponent(35, cts[2]);
+   cman.addComponent(36, cts[3]);
+   cman.addComponent(37, cts[4]);
+   cman.addComponent(38, cts[5]);
+   cman.addComponent(40, cts[6]);
+
+   // These have to be cached here, because after assignment none of the
+   // allocator-related functionality will work in cman.
+   auto num_floats = cman.getNumComponents<float>();
+   auto num_ints = cman.getNumComponents<int>();
+   auto num_cts = cman.getNumComponents<complicatedType_t<26> >();
+
+   REQUIRE( cman.getNumComponents<float>() == 3);
+   REQUIRE( cman.getNumComponents<int>() == 5);
+   REQUIRE( cman.getNumComponents<complicatedType_t<26> >() == 7);
+
+   cman.clear();
+
+   REQUIRE( cman.getNumComponents<float>() == 0);
+   REQUIRE( cman.getNumComponents<int>() == 0);
+   REQUIRE( cman.getNumComponents<complicatedType_t<26> >() == 0);
+}

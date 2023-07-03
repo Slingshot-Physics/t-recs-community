@@ -57,6 +57,13 @@ namespace trecs
             return *this;
          }
 
+         // Resets all of the entities and components in the ECB.
+         void clear(void)
+         {
+            entities_.clear();
+            components_.clear();
+         }
+
          void lockRegistration(void)
          {
             registration_locked_ = true;
@@ -73,11 +80,14 @@ namespace trecs
             components_.removeComponents(entity_uid);
          }
 
+         // Returns the numebr of active entities in the ECB.
          size_t numEntities(void) const
          {
             return entities_.size();
          }
 
+         // Returns the number of components that have been registered with
+         // the ECB.
          size_t numSignatures(void) const
          {
             return components_.getNumSignatures();

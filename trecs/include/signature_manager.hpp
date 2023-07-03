@@ -74,6 +74,7 @@ namespace trecs
             return id_to_signature_.at(type_id);
          }
 
+         // Returns the number of registered component signatures.
          size_t size(void) const
          {
             return signature_counter_;
