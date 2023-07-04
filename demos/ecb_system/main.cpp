@@ -71,6 +71,11 @@ typedef struct spring_damper
    float c;
 } spring_damper_t;
 
+typedef struct lennard_jones
+{
+   float k;
+} lennard_jones_t;
+
 class Registerer : public trecs::System
 {
    public:
@@ -94,6 +99,7 @@ class Registerer : public trecs::System
          for (int i = 0; i < 100; ++i)
          {
             auto new_entity = allocator.addEntity();
+            std::cout << "Got new entity: " << new_entity << "\n";
             allocator.addComponent(new_entity, pos_t{static_cast<float>(3.f * i), 0.f, 0.f});
             allocator.addComponent(new_entity, vel_t{0.f, 0.f, (((i % 2) == 0) ? 1.f : -1.f) * 10.f});
             allocator.addComponent(new_entity, acc_t{});
@@ -112,9 +118,7 @@ class Registerer : public trecs::System
       }
 
       void update(trecs::Allocator & allocator)
-      {
-
-      }
+      { }
 };
 
 class ForceCalculator : public trecs::System
@@ -182,6 +186,147 @@ class ForceCalculator : public trecs::System
       trecs::query_t point_mass_query_;
 };
 
+class ConditionalForceCalculator : public trecs::System
+{
+   public:
+      void registerComponents(trecs::Allocator & allocator) const override
+      {
+         
+      }
+
+      void registerQueries(trecs::Allocator & allocator) override
+      {
+         ecb_entity_ = allocator.addEntityComponentBuffer<lennard_jones_t, trecs::edge_t>(10000);
+         point_mass_query_ = allocator.addArchetypeQuery<pos_t, vel_t, acc_t>();
+      }
+
+      void update(trecs::Allocator & allocator)
+      {
+         auto ecb = allocator.getEntityComponentBuffer(ecb_entity_);
+         ecb->clear();
+
+         auto positions = allocator.getComponents<pos_t>();
+
+         const auto & point_mass_entities = allocator.getQueryEntities(point_mass_query_);
+
+         for (
+            auto pm_iter_a = point_mass_entities.begin();
+            pm_iter_a != point_mass_entities.end();
+            ++pm_iter_a
+         )
+         {
+            const auto & pos_a = *positions[*pm_iter_a];
+            for (
+               auto pm_iter_b = pm_iter_a;
+               pm_iter_b != point_mass_entities.end();
+               ++pm_iter_b
+            )
+            {
+               if (pm_iter_a == pm_iter_b)
+               {
+                  continue;
+               }
+
+               const auto & pos_b = *positions[*pm_iter_b];
+               float distance = sqrtf(
+                  powf(pos_a.vec[0] - pos_b.vec[0], 2.f) +
+                  powf(pos_a.vec[1] - pos_b.vec[1], 2.f) +
+                  powf(pos_a.vec[2] - pos_b.vec[2], 2.f)
+               );
+
+               if (distance < 0.5f)
+               {
+                  trecs::uid_t new_entity = ecb->addEntity();
+                  if (new_entity < 0)
+                  {
+                     std::cout << "ECB said I have an invalid entity\n";
+                  }
+                  trecs::edge_t new_edge;
+                  new_edge.nodeIdA = *pm_iter_a;
+                  new_edge.nodeIdB = *pm_iter_b;
+                  new_edge.flag = trecs::TRANSITIVE;
+                  ecb->updateComponent(new_entity, new_edge);
+
+                  lennard_jones_t lj;
+                  lj.k = powf(0.1f / distance, 12) - powf(0.1f / distance, 6);
+                  ecb->updateComponent(new_entity, lj);
+               }
+            }
+         }
+      }
+
+   private:
+      trecs::uid_t ecb_entity_;
+
+      trecs::query_t point_mass_query_;
+};
+
+class ConditionalForceApplier : public trecs::System
+{
+   public:
+      void registerComponents(trecs::Allocator & allocator) const override
+      {
+         
+      }
+
+      void registerQueries(trecs::Allocator & allocator) override
+      {
+         ecb_query_ = allocator.addArchetypeQuery<trecs::EntityComponentBuffer>();
+         point_mass_query_ = allocator.addArchetypeQuery<pos_t, vel_t, acc_t>();
+      }
+
+      void initialize(trecs::Allocator & allocator)
+      {
+         const auto ecb_entities = allocator.getQueryEntities(ecb_query_);
+         for (const auto ecb_entity : ecb_entities)
+         {
+            if (
+               allocator.getEntityComponentBuffer(
+                  ecb_entity
+               )->supportsComponents<lennard_jones_t>()
+            )
+            {
+               ecb_entity_ = ecb_entity;
+               break;
+            }
+         }
+      }
+
+      void update(trecs::Allocator & allocator)
+      {
+         auto ecb = allocator.getEntityComponentBuffer(ecb_entity_);
+
+         const auto lj_edge_components = ecb->getComponents<trecs::edge_t>();
+         const auto lj_components = ecb->getComponents<lennard_jones_t>();
+
+         auto accelerations = allocator.getComponents<acc_t>();
+
+         const auto & point_mass_entities = allocator.getQueryEntities(point_mass_query_);
+
+         const auto & ecb_entities = ecb->getEntities();
+
+         // Need a way to get entities out of an ECB.
+         for (const auto lj_entity : ecb_entities)
+         {
+            auto accel_a = accelerations[lj_edge_components[lj_entity]->nodeIdA];
+            auto accel_b = accelerations[lj_edge_components[lj_entity]->nodeIdB];
+
+            for (int i = 0; i < 3; ++i)
+            {
+               (*accel_a)[i] += lj_components[lj_entity]->k;
+               (*accel_b)[i] -= lj_components[lj_entity]->k;
+            }
+         }
+      }
+
+   private:
+      trecs::uid_t ecb_entity_;
+
+      trecs::query_t point_mass_query_;
+
+      trecs::query_t ecb_query_;
+};
+
 class Integrator : public trecs::System
 {
    public:
@@ -236,15 +381,19 @@ int main(void)
    trecs::Allocator allocator(256);
    auto registerer = allocator.registerSystem<Registerer>();
    auto integrator = allocator.registerSystem<Integrator>();
+   auto conditional_force_calculator = allocator.registerSystem<ConditionalForceCalculator>();
+   auto conditional_force_applier = allocator.registerSystem<ConditionalForceApplier>();
    auto force_calculator = allocator.registerSystem<ForceCalculator>();
 
    allocator.initializeSystems();
 
    std::cout << "initialized\n";
 
-   for (int i = 0; i < 1000000; ++i)
+   for (int i = 0; i < 100000; ++i)
    {
       force_calculator->update(allocator);
+      conditional_force_calculator->update(allocator);
+      conditional_force_applier->update(allocator);
       integrator->update(allocator);
       if ((i % 1000) == 0)
       {

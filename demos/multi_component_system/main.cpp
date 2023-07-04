@@ -145,7 +145,7 @@ class Integrator : public trecs::System
 
 int main(void)
 {
-   trecs::Allocator allocator(128);
+   trecs::Allocator allocator(256);
    auto registerer = allocator.registerSystem<Registerer>();
    auto integrator = allocator.registerSystem<Integrator>();
 

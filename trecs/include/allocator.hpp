@@ -74,7 +74,7 @@ namespace trecs
          {
             if (!entities_.entityActive(entity_uid))
             {
-               std::cout << "Entity uid " << entity_uid << " inactive\n";
+               std::cout << "addComponent entity uid " << entity_uid << " inactive\n";
                return false;
             }
 
@@ -116,7 +116,7 @@ namespace trecs
          {
             if (!entities_.entityActive(entity_uid))
             {
-               std::cout << "Entity uid " << entity_uid << " inactive\n";
+               std::cout << "updateComponent entity uid " << entity_uid << " inactive\n";
                return false;
             }
 
@@ -160,7 +160,7 @@ namespace trecs
          {
             if (!entities_.entityActive(entity_uid))
             {
-               std::cout << "Entity: " << entity_uid << " inactive\n";
+               std::cout << "getComponent entity: " << entity_uid << " inactive\n";
                return nullptr;
             }
 

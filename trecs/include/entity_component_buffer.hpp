@@ -171,7 +171,7 @@ namespace trecs
          {
             if (!entities_.entityActive(entity_uid))
             {
-               std::cout << "Entity uid " << entity_uid << " inactive\n";
+               std::cout << "ECB entity uid " << entity_uid << " inactive\n";
                return false;
             }
 

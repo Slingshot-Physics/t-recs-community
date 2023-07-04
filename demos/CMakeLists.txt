@@ -1,6 +1,7 @@
 
 set(
    exec_folders
+   ecb_system
    multi_component_multi_system
    multi_component_system
 )

@@ -100,6 +100,7 @@ jobs:
       - name: Run demos
         run: |
           cd build-windows-workflow/build
+          ./ecb_system
           ./multi_component_multi_system
           ./multi_component_system
 
