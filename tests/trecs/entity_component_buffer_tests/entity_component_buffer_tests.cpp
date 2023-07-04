@@ -301,7 +301,7 @@ TEST_CASE( "get a component array wrapper", "[EntityComponentBuffer]" )
 
 }
 
-TEST_CASE( "add more than allocated components, then delete them all", "[EntityComponentBuffer]" )
+TEST_CASE( "add more than the maximum number of components, then delete them all", "[EntityComponentBuffer]" )
 {
    const size_t max_size = 256;
    trecs::EntityComponentBuffer ecb(max_size);
@@ -340,6 +340,8 @@ TEST_CASE( "add more than allocated components, then delete them all", "[EntityC
          cts.push_back(temp_ct);
       }
    }
+
+   std::cout << "number of entities: " << entities.size() << "\n";
 
    REQUIRE( ecb.getComponentEntities<int>().size() == 86);
    REQUIRE( ecb.getComponentEntities<float>().size() == 85);
@@ -858,26 +860,4 @@ TEST_CASE( "clear full ECB", "[EntityComponentBuffer]" )
    REQUIRE( ecb.getComponentEntities<float>().size() == 0 );
    REQUIRE( ecb.getComponentEntities<int>().size() == 0 );
    REQUIRE( ecb.getComponentEntities<complicatedType_t<0> >().size() == 0 );
-}
-
-TEST_CASE( "get entities from empty ECB", "[EntityComponentBuffer]" )
-{
-   const size_t max_size = 512;
-   trecs::EntityComponentBuffer ecb(max_size);
-
-   REQUIRE( ecb.getEntities().size() == 0 );
-}
-
-TEST_CASE( "get entities from non-empty ECB", "[EntityComponentBuffer]" )
-{
-   const size_t max_size = 512;
-   trecs::EntityComponentBuffer ecb(max_size);
-
-   const size_t num_entities = 128;
-   for (int i = 0; i < num_entities; ++i)
-   {
-      ecb.addEntity();
-   }
-
-   REQUIRE( ecb.getEntities().size() == num_entities );
 }

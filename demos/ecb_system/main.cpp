@@ -303,10 +303,7 @@ class ConditionalForceApplier : public trecs::System
 
          const auto & point_mass_entities = allocator.getQueryEntities(point_mass_query_);
 
-         const auto & ecb_entities = ecb->getEntities();
-
-         // Need a way to get entities out of an ECB.
-         for (const auto lj_entity : ecb_entities)
+         for (trecs::uid_t lj_entity = 0; lj_entity < ecb->numEntities(); ++lj_entity)
          {
             auto accel_a = accelerations[lj_edge_components[lj_entity]->nodeIdA];
             auto accel_b = accelerations[lj_edge_components[lj_entity]->nodeIdB];

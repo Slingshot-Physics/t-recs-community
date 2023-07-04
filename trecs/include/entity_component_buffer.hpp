@@ -20,14 +20,14 @@ namespace trecs
 
          EntityComponentBuffer(void)
             : max_buffer_size_(0)
-            , entities_(max_buffer_size_)
+            , num_entities_(0)
             , components_(max_buffer_size_)
             , registration_locked_(false)
          { }
       
          EntityComponentBuffer(size_t max_buffer_size)
             : max_buffer_size_(max_buffer_size)
-            , entities_(max_buffer_size_)
+            , num_entities_(0)
             , components_(max_buffer_size_)
             , registration_locked_(false)
          { }
@@ -42,7 +42,7 @@ namespace trecs
             }
 
             max_buffer_size_ = other.max_buffer_size_;
-            entities_ = other.entities_;
+            num_entities_ = other.num_entities_;
             components_ = other.components_;
             registration_locked_ = other.registration_locked_;
 
@@ -59,7 +59,7 @@ namespace trecs
             }
 
             max_buffer_size_ = other.max_buffer_size_;
-            entities_ = other.entities_;
+            num_entities_ = other.num_entities_;
             components_ = other.components_;
             registration_locked_ = other.registration_locked_;
 
@@ -69,7 +69,7 @@ namespace trecs
          // Resets all of the entities and components in the ECB.
          void clear(void)
          {
-            entities_.clear();
+            num_entities_ = 0;
             components_.clear();
          }
 
@@ -82,13 +82,19 @@ namespace trecs
 
          uid_t addEntity(void)
          {
-            return entities_.addEntity();
+            if (static_cast<size_t>(num_entities_) >= max_buffer_size_)
+            {
+               return -1;
+            }
+
+            uid_t new_entity = num_entities_;
+            ++num_entities_;
+            return new_entity;
          }
 
-         // Returns the numebr of active entities in the ECB.
-         size_t numEntities(void) const
+         uid_t numEntities(void) const
          {
-            return entities_.size();
+            return num_entities_;
          }
 
          // Returns the number of components that have been registered with
@@ -140,13 +146,6 @@ namespace trecs
             }
          }
 
-         // Returns a const reference to a vector of all active entities in
-         // the ECB.
-         const std::vector<uid_t> & getEntities(void) const
-         {
-            return entities_.getUids();
-         }
-
          // Returns a copy of the vector of entities associated with a
          // particular component type.
          template <typename Component_T>
@@ -163,7 +162,7 @@ namespace trecs
          template <typename Component_T>
          bool updateComponent(uid_t entity_uid, const Component_T & component)
          {
-            if (!entities_.entityActive(entity_uid))
+            if (entity_uid >= num_entities_ || entity_uid < 0)
             {
                std::cout << "ECB entity uid " << entity_uid << " inactive\n";
                return false;
@@ -190,31 +189,18 @@ namespace trecs
                return false;
             }
 
-            DefaultArchetype new_arch = entities_.getArchetype(entity_uid);
-            new_arch.mergeSignature(component_sig);
-
-            entities_.setArchetype(entity_uid, new_arch);
-            components_.addComponent(entity_uid, component);
-
-            return true;
+            return components_.addComponent(entity_uid, component) >= 0;
          }
 
-         // Attempt to retrieve a component of a particular type from an
-         // entity. Returns nullptr if the requested entity is not active or if
-         // an unsupported component type is used.
+         // Attempt to retrieve a component of a particular type from an entity
+         // Returns nullptr if the requested entity is not active or if an
+         // unsupported component type is used.
          template <typename Component_T>
          Component_T * getComponent(uid_t entity_uid)
          {
-            if (!entities_.entityActive(entity_uid))
+            if (entity_uid >= num_entities_ || entity_uid < 0)
             {
-               return nullptr;
-            }
-
-            DefaultArchetype old_arch = entities_.getArchetype(entity_uid);
-            signature_t component_sig = components_.getSignature<Component_T>();
-
-            if (!old_arch.supports(component_sig))
-            {
+               std::cout << "ECB entity uid " << entity_uid << " inactive\n";
                return nullptr;
             }
 
@@ -230,7 +216,7 @@ namespace trecs
       private:
          size_t max_buffer_size_;
 
-         EntityManager entities_;
+         uid_t num_entities_;
 
          ComponentManager components_;
 
