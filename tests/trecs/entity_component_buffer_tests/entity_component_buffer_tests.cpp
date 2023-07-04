@@ -923,3 +923,25 @@ TEST_CASE( "clear full ECB", "[EntityComponentBuffer]" )
    REQUIRE( ecb.getComponentEntities<int>().size() == 0 );
    REQUIRE( ecb.getComponentEntities<complicatedType_t<0> >().size() == 0 );
 }
+
+TEST_CASE( "get entities from empty ECB", "[EntityComponentBuffer]" )
+{
+   const size_t max_size = 512;
+   trecs::EntityComponentBuffer ecb(max_size);
+
+   REQUIRE( ecb.getEntities().size() == 0 );
+}
+
+TEST_CASE( "get entities from non-empty ECB", "[EntityComponentBuffer]" )
+{
+   const size_t max_size = 512;
+   trecs::EntityComponentBuffer ecb(max_size);
+
+   const size_t num_entities = 128;
+   for (int i = 0; i < num_entities; ++i)
+   {
+      ecb.addEntity();
+   }
+
+   REQUIRE( ecb.getEntities().size() == num_entities );
+}

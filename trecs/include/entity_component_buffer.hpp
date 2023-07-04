@@ -73,6 +73,8 @@ namespace trecs
             components_.clear();
          }
 
+         // Component types will not be registerable with the ECB after this
+         // method is called.
          void lockRegistration(void)
          {
             registration_locked_ = true;
@@ -120,6 +122,9 @@ namespace trecs
             return supported;
          }
 
+         // Attempts to register a component type with the ECB. The component
+         // will not be registered if the ECB's registration is locked or if
+         // the same component type has already been registered.
          template <typename Component_T>
          void registerComponent(void)
          {
@@ -129,6 +134,9 @@ namespace trecs
             }
          }
 
+         // Attempts to register one or more component types with the ECB. A
+         // component will not be registered if the ECB's registration is
+         // locked or if the same component type has already been registered.
          template <class...Types>
          void registerComponents(void)
          {
@@ -136,6 +144,13 @@ namespace trecs
             {
                fancyRegisterComponents<Types...>();
             }
+         }
+
+         // Returns a const reference to a vector of all active entities in
+         // the ECB.
+         const std::vector<uid_t> & getEntities(void) const
+         {
+            return entities_.getUids();
          }
 
          // Returns a copy of the vector of entities associated with a
