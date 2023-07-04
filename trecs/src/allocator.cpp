@@ -10,6 +10,9 @@ namespace trecs
    {
       registerComponent<trecs::edge_t>();
       edge_query_ = addArchetypeQuery<trecs::edge_t>();
+
+      registerComponent<EntityComponentBuffer>();
+      ecb_query_ = addArchetypeQuery<EntityComponentBuffer>();
    }
 
    Allocator::Allocator(unsigned int max_num_entities)
@@ -19,6 +22,9 @@ namespace trecs
    {
       registerComponent<trecs::edge_t>();
       edge_query_ = addArchetypeQuery<trecs::edge_t>();
+
+      registerComponent<EntityComponentBuffer>();
+      ecb_query_ = addArchetypeQuery<EntityComponentBuffer>();
    }
 
    uid_t Allocator::addEntity(void)

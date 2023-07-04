@@ -44,6 +44,7 @@ namespace trecs
             max_buffer_size_ = other.max_buffer_size_;
             entities_ = other.entities_;
             components_ = other.components_;
+            registration_locked_ = other.registration_locked_;
 
             return *this;
          }
@@ -60,6 +61,7 @@ namespace trecs
             max_buffer_size_ = other.max_buffer_size_;
             entities_ = other.entities_;
             components_ = other.components_;
+            registration_locked_ = other.registration_locked_;
 
             return *this;
          }

@@ -239,12 +239,16 @@ namespace trecs
             components_.registerComponent<Component_T>();
          }
 
+         template <typename...ComponentTypes>
          uid_t addEntityComponentBuffer(size_t max_buffer_size)
          {
-            registerComponent<EntityComponentBuffer>();
+            const auto & ecb_entities = getQueryEntities(ecb_query_);
 
             uid_t ecb_entity = addEntity();
             EntityComponentBuffer temp_ecb(max_buffer_size);
+
+            temp_ecb.registerComponents<ComponentTypes...>();
+            temp_ecb.lockRegistration();
 
             if (!updateComponent(ecb_entity, temp_ecb))
             {
@@ -325,6 +329,8 @@ namespace trecs
          const std::unordered_set<uid_t> empty_set_;
 
          query_t edge_query_;
+
+         query_t ecb_query_;
 
          EntityManager entities_;
 
