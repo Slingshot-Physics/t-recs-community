@@ -471,45 +471,6 @@ TEST_CASE( "add components to entity component buffer", "[Allocator]" )
    REQUIRE( *ecb->getComponent<double>(entities.front()) == 2.717819 );
 }
 
-TEST_CASE( "add components to entity component buffer, delete entity", "[Allocator]" )
-{
-   trecs::Allocator allocator;
-
-   trecs::uid_t ecb_entity = allocator.addEntityComponentBuffer<int, float, double>(120);
-
-   auto ecb = allocator.getComponent<trecs::EntityComponentBuffer>(ecb_entity);
-
-   std::vector<trecs::uid_t> entities;
-
-   entities.push_back(ecb->addEntity());
-   ecb->updateComponent(entities.back(), 44);
-   ecb->updateComponent(entities.back(), 44.9123f);
-   ecb->updateComponent(entities.back(), 2.717819);
-
-   REQUIRE( *ecb->getComponent<int>(entities.back()) == 44 );
-   REQUIRE( *ecb->getComponent<float>(entities.back()) == 44.9123f );
-   REQUIRE( *ecb->getComponent<double>(entities.back()) == 2.717819 );
-
-   entities.push_back(ecb->addEntity());
-   ecb->updateComponent(entities.back(), 44 * 2);
-   ecb->updateComponent(entities.back(), 44.9123f * 2.f);
-   ecb->updateComponent(entities.back(), 2.717819 * 2.0);
-
-   REQUIRE( *ecb->getComponent<int>(entities.back()) == (44 * 2) );
-   REQUIRE( *ecb->getComponent<float>(entities.back()) == (44.9123f * 2.f) );
-   REQUIRE( *ecb->getComponent<double>(entities.back()) == (2.717819 * 2.0) );
-
-   REQUIRE( *ecb->getComponent<int>(entities.front()) == 44 );
-   REQUIRE( *ecb->getComponent<float>(entities.front()) == 44.9123f );
-   REQUIRE( *ecb->getComponent<double>(entities.front()) == 2.717819 );
-
-   ecb->removeEntity(entities.front());
-
-   REQUIRE( *ecb->getComponent<int>(entities.back()) == (44 * 2) );
-   REQUIRE( *ecb->getComponent<float>(entities.back()) == (44.9123f * 2.f) );
-   REQUIRE( *ecb->getComponent<double>(entities.back()) == (2.717819 * 2.0) );
-}
-
 TEST_CASE( "deny manually adding ECB", "[Allocator]")
 {
    trecs::Allocator allocator;

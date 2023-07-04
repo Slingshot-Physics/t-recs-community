@@ -113,10 +113,7 @@ TEST_CASE( "add more than the maximum number of entities, delete them all", "[En
 
    REQUIRE( ecb.numEntities() == max_size );
 
-   for (const auto entity : entities)
-   {
-      ecb.removeEntity(entity);
-   }
+   ecb.clear();
 
    REQUIRE( ecb.numEntities() == 0 );
 }
@@ -146,64 +143,6 @@ TEST_CASE( "components on an entity can be updated", "[EntityComponentBuffer]" )
    REQUIRE( ecb.updateComponent(entity_id2, comp_a));
    REQUIRE( ecb.getComponent<complicatedType_t<0> >(entity_id2)->int_field == 5 );
    REQUIRE( ecb.getComponent<complicatedType_t<0> >(entity_id2)->float_field == 3.14f );
-}
-
-TEST_CASE( "an entity's components can be updated and removed", "[EntityComponentBuffer]" )
-{
-   trecs::EntityComponentBuffer ecb(256);
-   ecb.registerComponent<complicatedType_t<0> >();
-   ecb.registerComponent<int>();
-   ecb.registerComponent<float>();
-
-   auto entity = ecb.addEntity();
-
-   ecb.updateComponent(entity, -234);
-   REQUIRE( ecb.getComponent<int>(entity) != nullptr );
-   REQUIRE( *ecb.getComponent<int>(entity) == -234 );
-
-   ecb.removeComponent<int>(entity);
-   REQUIRE( ecb.getComponent<int>(entity) == nullptr );
-
-   ecb.updateComponent(entity, 2.123f);
-   REQUIRE( ecb.getComponent<float>(entity) != nullptr );
-   REQUIRE( *ecb.getComponent<float>(entity) == 2.123f );
-
-   ecb.updateComponent(entity, 2.f * 2.123f);
-   REQUIRE( ecb.getComponent<float>(entity) != nullptr );
-   REQUIRE( *ecb.getComponent<float>(entity) == (2.f * 2.123f) );
-
-   complicatedType_t<0> temp_ct = {100000, -2.717};
-   ecb.updateComponent(entity, temp_ct);
-   REQUIRE( ecb.getComponent<complicatedType_t<0> >(entity) != nullptr );
-   REQUIRE( (*ecb.getComponent<complicatedType_t<0> >(entity)) == temp_ct );
-}
-
-TEST_CASE( "no harm, no foul removing an unregistered component", "[EntityComponentBuffer]" )
-{
-   trecs::EntityComponentBuffer ecb(256);
-   ecb.registerComponent<complicatedType_t<0> >();
-   ecb.registerComponent<int>();
-   ecb.registerComponent<float>();
-
-   auto entity = ecb.addEntity();
-
-   ecb.removeComponent<complicatedType_t<987> >(entity);
-
-   REQUIRE( true );
-}
-
-TEST_CASE( "no harm, no foul removing a non-existent component", "[EntityComponentBuffer]" )
-{
-   trecs::EntityComponentBuffer ecb(256);
-   ecb.registerComponent<complicatedType_t<0> >();
-   ecb.registerComponent<int>();
-   ecb.registerComponent<float>();
-
-   auto entity = ecb.addEntity();
-
-   ecb.removeComponent<int>(entity);
-
-   REQUIRE( true );
 }
 
 TEST_CASE( "components can be updated on one entity", "[EntityComponentBuffer]" )
@@ -406,10 +345,7 @@ TEST_CASE( "add more than allocated components, then delete them all", "[EntityC
    REQUIRE( ecb.getComponentEntities<float>().size() == 85);
    REQUIRE( ecb.getComponentEntities<complicatedType_t<0> >().size() == 85);
 
-   for (const auto entity : entities)
-   {
-      ecb.removeEntity(entity);
-   }
+   ecb.clear();
 
    REQUIRE( ecb.getComponentEntities<int>().size() == 0);
    REQUIRE( ecb.getComponentEntities<float>().size() == 0);

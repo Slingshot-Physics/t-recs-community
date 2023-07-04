@@ -85,12 +85,6 @@ namespace trecs
             return entities_.addEntity();
          }
 
-         void removeEntity(uid_t entity_uid)
-         {
-            entities_.removeEntity(entity_uid);
-            components_.removeComponents(entity_uid);
-         }
-
          // Returns the numebr of active entities in the ECB.
          size_t numEntities(void) const
          {
@@ -231,35 +225,6 @@ namespace trecs
          ComponentArrayWrapper<Component_T> getComponents(void)
          {
             return components_.getComponents<Component_T>();
-         }
-
-         // Attempts to remove a given component type from a specified entity.
-         template <typename Component_T>
-         void removeComponent(uid_t entity_uid)
-         {
-            if (!entities_.entityActive(entity_uid))
-            {
-               return;
-            }
-
-            signature_t component_sig = components_.getSignature<Component_T>();
-
-            if (component_sig == error_signature)
-            {
-               return;
-            }
-
-            DefaultArchetype old_arch = entities_.getArchetype(entity_uid);
-
-            if (!old_arch.supports(component_sig))
-            {
-               return;
-            }
-
-            components_.removeComponent<Component_T>(entity_uid);
-            DefaultArchetype new_arch = old_arch;
-            new_arch.removeSignature(component_sig);
-            entities_.setArchetype(entity_uid, new_arch);
          }
 
       private:
