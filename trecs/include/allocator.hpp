@@ -72,17 +72,17 @@ namespace trecs
          template <typename Component_T>
          bool addComponent(uid_t entity_uid, const Component_T & component)
          {
-            if (!entities_.entityActive(entity_uid))
-            {
-               std::cout << "addComponent entity uid " << entity_uid << " inactive\n";
-               return false;
-            }
-
             Component_T * old_component = components_.getComponent<Component_T>(entity_uid);
 
             if (old_component != nullptr)
             {
                std::cout << "Component type " << typeid(Component_T).name() << " already exists on entity " << entity_uid << "\n";
+               return false;
+            }
+
+            if (!entities_.entityActive(entity_uid))
+            {
+               std::cout << "addComponent entity uid " << entity_uid << " inactive\n";
                return false;
             }
 
@@ -114,12 +114,6 @@ namespace trecs
          template <typename Component_T>
          bool updateComponent(uid_t entity_uid, const Component_T & component)
          {
-            if (!entities_.entityActive(entity_uid))
-            {
-               std::cout << "updateComponent entity uid " << entity_uid << " inactive\n";
-               return false;
-            }
-
             Component_T * old_component = components_.getComponent<Component_T>(entity_uid);
 
             // This is just as good as checking if an entity's current
@@ -138,6 +132,11 @@ namespace trecs
             {
                std::cout << "Couldn't add component to entity UID: " << entity_uid << "\n";
                std::cout << "\tComponent type " << typeid(Component_T).name() << " isn't registered\n";
+               return false;
+            }
+            else if (!entities_.entityActive(entity_uid))
+            {
+               std::cout << "updateComponent entity uid " << entity_uid << " inactive\n";
                return false;
             }
 
