@@ -153,14 +153,17 @@ class ForceCalculator : public trecs::System
             pos_t & pos_a = *positions[body_a_entity];
             pos_t & pos_b = *positions[body_b_entity];
 
-            vel_t & vel_a = *velocities[body_a_entity];
-            vel_t & vel_b = *velocities[body_b_entity];
-
             float distance = sqrtf(
                powf(pos_a.vec[0] - pos_b.vec[0], 2.f) +
                powf(pos_a.vec[1] - pos_b.vec[1], 2.f) +
                powf(pos_a.vec[2] - pos_b.vec[2], 2.f)
             );
+
+            vel_t & vel_a = *velocities[body_a_entity];
+            vel_t & vel_b = *velocities[body_b_entity];
+
+            acc_t & accel_a = *accelerations[body_a_entity];
+            acc_t & accel_b = *accelerations[body_b_entity];
 
             for (int i = 0; i < 3; ++i)
             {
@@ -170,8 +173,8 @@ class ForceCalculator : public trecs::System
                   vel_a.vec[i] - vel_b.vec[i]
                );
 
-               accelerations[body_a_entity]->vec[i] = f_b_on_a;
-               accelerations[body_b_entity]->vec[i] = -1.f * f_b_on_a;
+               accel_a.vec[i] = f_b_on_a;
+               accel_b.vec[i] = -1.f * f_b_on_a;
             }
          }
       }

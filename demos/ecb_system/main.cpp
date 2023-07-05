@@ -157,14 +157,17 @@ class ForceCalculator : public trecs::System
             pos_t & pos_a = *positions[body_a_entity];
             pos_t & pos_b = *positions[body_b_entity];
 
-            vel_t & vel_a = *velocities[body_a_entity];
-            vel_t & vel_b = *velocities[body_b_entity];
-
             float distance = sqrtf(
                powf(pos_a.vec[0] - pos_b.vec[0], 2.f) +
                powf(pos_a.vec[1] - pos_b.vec[1], 2.f) +
                powf(pos_a.vec[2] - pos_b.vec[2], 2.f)
             );
+
+            vel_t & vel_a = *velocities[body_a_entity];
+            vel_t & vel_b = *velocities[body_b_entity];
+
+            acc_t & accel_a = *accelerations[body_a_entity];
+            acc_t & accel_b = *accelerations[body_b_entity];
 
             for (int i = 0; i < 3; ++i)
             {
@@ -174,8 +177,8 @@ class ForceCalculator : public trecs::System
                   vel_a.vec[i] - vel_b.vec[i]
                );
 
-               accelerations[body_a_entity]->vec[i] = f_b_on_a;
-               accelerations[body_b_entity]->vec[i] = -1.f * f_b_on_a;
+               accel_a.vec[i] = f_b_on_a;
+               accel_b.vec[i] = -1.f * f_b_on_a;
             }
          }
       }
@@ -196,7 +199,7 @@ class ConditionalForceCalculator : public trecs::System
 
       void registerQueries(trecs::Allocator & allocator) override
       {
-         ecb_entity_ = allocator.addEntityComponentBuffer<lennard_jones_t, trecs::edge_t>(10000);
+         ecb_entity_ = allocator.addEntityComponentBuffer<lennard_jones_t, trecs::edge_t>(100);
          point_mass_query_ = allocator.addArchetypeQuery<pos_t, vel_t, acc_t>();
       }
 
@@ -386,6 +389,24 @@ int main(void)
 
    std::cout << "initialized\n";
 
+   trecs::uid_t ecb_entity = -1;
+   trecs::query_t ecb_query = allocator.addArchetypeQuery<trecs::EntityComponentBuffer>();
+   const auto ecb_entities = allocator.getQueryEntities(ecb_query);
+   for (const auto temp_ecb_entity : ecb_entities)
+   {
+      if (
+         allocator.getEntityComponentBuffer(
+            temp_ecb_entity
+         )->supportsComponents<lennard_jones_t>()
+      )
+      {
+         ecb_entity = temp_ecb_entity;
+         break;
+      }
+   }
+
+   const auto ecb = allocator.getEntityComponentBuffer(ecb_entity);
+
    for (int i = 0; i < 100000; ++i)
    {
       force_calculator->update(allocator);
@@ -395,6 +416,7 @@ int main(void)
       if ((i % 1000) == 0)
       {
          std::cout << "step " << (i / 1000) << "\n";
+         std::cout << "\tnum ecb entities: " << ecb->numEntities() << "\n";
       }
    }
 
