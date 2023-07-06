@@ -44,14 +44,13 @@ namespace trecs
          // This does not free any of the allocated memory.
          void release(void);
 
-         // Indicates that a component of a particular type can be added to
-         // this component manager.
+         // Attempts to register a component type with the component manager.
          template <typename Component_T>
          void registerComponent(void)
          {
-            signature_t old_sig = signatures_.getSignature<Component_T>();
-            if (old_sig != error_signature)
+            if (signatures_.componentRegistered<Component_T>())
             {
+               signature_t old_sig = signatures_.getSignature<Component_T>();
                std::cout << "Component with signature " << old_sig << " has already been registered\n";
                return;
             }
