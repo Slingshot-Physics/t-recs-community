@@ -238,11 +238,12 @@ namespace trecs
             components_.registerComponent<Component_T>();
          }
 
+         // Add an ECB with the user-provided component types pre-registered.
+         // The ECB's registration is locked after it's created and added to
+         // the ECS. Returns the UID of the ECB if successful.
          template <typename...ComponentTypes>
          uid_t addEntityComponentBuffer(size_t max_buffer_size)
          {
-            const auto & ecb_entities = getQueryEntities(ecb_query_);
-
             uid_t ecb_entity = addEntity();
             EntityComponentBuffer temp_ecb(max_buffer_size);
 

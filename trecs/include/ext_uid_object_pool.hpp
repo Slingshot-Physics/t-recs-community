@@ -179,7 +179,7 @@ namespace trecs
          std::vector<uid_t> getUids(void) const
          {
             std::vector<uid_t> uids;
-            for (const auto uid_to_index: uid_to_index_)
+            for (const auto & uid_to_index: uid_to_index_)
             {
                uids.push_back(uid_to_index.first);
             }
