@@ -50,8 +50,6 @@ namespace trecs
          {
             if (signatures_.componentRegistered<Component_T>())
             {
-               signature_t old_sig = signatures_.getSignature<Component_T>();
-               std::cout << "Component with signature " << old_sig << " has already been registered\n";
                return;
             }
 

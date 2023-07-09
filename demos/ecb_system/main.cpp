@@ -92,7 +92,7 @@ class Registerer : public trecs::System
 
       }
 
-      void initialize(trecs::Allocator & allocator)
+      void initialize(trecs::Allocator & allocator) override
       {
          std::vector<trecs::uid_t> point_mass_entities;
          // Add a bunch of entities with pos, vel, accel components.
@@ -278,7 +278,7 @@ class ConditionalForceApplier : public trecs::System
          point_mass_query_ = allocator.addArchetypeQuery<pos_t, vel_t, acc_t>();
       }
 
-      void initialize(trecs::Allocator & allocator)
+      void initialize(trecs::Allocator & allocator) override
       {
          const auto ecb_entities = allocator.getQueryEntities(ecb_query_);
          for (const auto ecb_entity : ecb_entities)
