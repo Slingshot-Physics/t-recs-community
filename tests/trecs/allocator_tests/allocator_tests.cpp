@@ -61,6 +61,37 @@ TEST_CASE( "components can be updated on one entity", "[Allocator]")
    REQUIRE( allocator.getComponent<complicatedType_t<0> >(entity_id1)->float_field == 2.5f );
 }
 
+TEST_CASE( "allocator reports components correctly", "[Allocator]")
+{
+   trecs::Allocator allocator;
+
+   trecs::uid_t new_entity = allocator.addEntity();
+   allocator.registerComponent<int>();
+   allocator.registerComponent<float>();
+   allocator.registerComponent<double>();
+
+   allocator.addComponent(new_entity, 12);
+
+   REQUIRE( allocator.hasComponent<int>(new_entity) );
+   REQUIRE( !allocator.hasComponent<float>(new_entity) );
+   REQUIRE( !allocator.hasComponent<double>(new_entity) );
+   REQUIRE( !allocator.hasComponent<char>(new_entity) );
+
+   allocator.addComponent(new_entity, -987.123f);
+
+   REQUIRE( allocator.hasComponent<int>(new_entity) );
+   REQUIRE( allocator.hasComponent<float>(new_entity) );
+   REQUIRE( !allocator.hasComponent<double>(new_entity) );
+   REQUIRE( !allocator.hasComponent<char>(new_entity) );
+
+   allocator.removeComponent<int>(new_entity);
+
+   REQUIRE( !allocator.hasComponent<int>(new_entity) );
+   REQUIRE( allocator.hasComponent<float>(new_entity) );
+   REQUIRE( !allocator.hasComponent<double>(new_entity) );
+   REQUIRE( !allocator.hasComponent<char>(new_entity) );
+}
+
 TEST_CASE( "can't add components to inactive entity", "[Allocator]")
 {
    complicatedType_t<0> comp_a;

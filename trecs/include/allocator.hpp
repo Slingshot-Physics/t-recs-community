@@ -186,10 +186,10 @@ namespace trecs
                return nullptr;
             }
 
-            DefaultArchetype old_arch = entities_.getArchetype(entity_uid);
+            DefaultArchetype entity_arch = entities_.getArchetype(entity_uid);
             signature_t component_sig = getComponentSignature<Component_T>();
 
-            if (!old_arch.supports(component_sig))
+            if (!entity_arch.supports(component_sig))
             {
                return nullptr;
             }
@@ -201,6 +201,25 @@ namespace trecs
          ComponentArrayWrapper<Component_T> getComponents(void)
          {
             return components_.getComponents<Component_T>();
+         }
+
+         template <typename Component_T>
+         bool hasComponent(uid_t entity_uid)
+         {
+            if (!entities_.entityActive(entity_uid))
+            {
+               return false;
+            }
+
+            DefaultArchetype entity_arch = entities_.getArchetype(entity_uid);
+            signature_t component_sig = getComponentSignature<Component_T>();
+
+            if (!entity_arch.supports(component_sig))
+            {
+               return false;
+            }
+
+            return true;
          }
 
          template <typename Component_T>
