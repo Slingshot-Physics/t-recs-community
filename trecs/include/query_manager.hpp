@@ -101,10 +101,19 @@ namespace trecs
             return false;
          }
 
+         // Returns the set of entities associated with a valid query ID.
+         // Returns an empty set of entities if the query ID is invalid.
+         // Prints out a warning if the query ID is invalid.
          auto getArchetypeEntities(
             const query_t query_id
          ) const -> const std::unordered_set<trecs::uid_t> &
          {
+            if (query_id >= archetypes_.size())
+            {
+               std::cout << "Invalid query ID used to retrieve archetype entities\n";
+               return empty_set_;
+            }
+
             return archetypes_to_entities_.at(archetypes_.at(query_id));
          }
 
@@ -113,6 +122,8 @@ namespace trecs
          std::map<DefaultArchetype, std::unordered_set<trecs::uid_t> > archetypes_to_entities_;
 
          std::vector<DefaultArchetype> archetypes_;
+
+         std::unordered_set<trecs::uid_t> empty_set_;
 
    };
 

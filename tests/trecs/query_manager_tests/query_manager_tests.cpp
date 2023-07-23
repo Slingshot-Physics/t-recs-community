@@ -99,23 +99,6 @@ TEST_CASE("add unique and non-unique archetypes with query ID", "[QueryManager]"
    REQUIRE( query_d == query_e );
 }
 
-TEST_CASE("query manager crashes on invalid query ID", "[QueryManager]")
-{
-   trecs::QueryManager queries;
-   bool caught_exception = false;
-   try
-   {
-      queries.getArchetypeEntities(100);
-   }
-   catch(const std::exception& e)
-   {
-      std::cerr << e.what() << '\n';
-      caught_exception = true;
-   }
-   
-   REQUIRE( caught_exception );
-}
-
 // Verifies that entity sorting respects the notion that:
 //    an entity's archetype satisfies a query if the entity's archetype has at
 //    least the same bits as the query archetype.
@@ -379,4 +362,26 @@ TEST_CASE( "add node entities with archetype subset", "[QueryManager]" )
    REQUIRE( queries.getArchetypeEntities(query_a).size() == 8 );
    REQUIRE( queries.getArchetypeEntities(query_b).size() == 16 );
    
+}
+
+TEST_CASE( "retrieve non-existent query from empty manager", "[QueryManager]" )
+{
+   trecs::QueryManager queries;
+   REQUIRE(queries.getArchetypeEntities(123).size() == 0);
+}
+
+TEST_CASE( "retrieve non-existent query from non-empty manager", "[QueryManager]" )
+{
+   trecs::QueryManager queries;
+
+   trecs::DefaultArchetype ss_archetypes[2] = {
+      archFromBits(0b10001),
+      archFromBits(0b01001)
+   };
+
+   trecs::query_t query_a = queries.addArchetypeQuery(ss_archetypes[0]);
+   trecs::query_t query_b = queries.addArchetypeQuery(ss_archetypes[1]);
+
+   REQUIRE(queries.getArchetypeEntities(123).size() == 0);
+   REQUIRE(queries.getArchetypeEntities(13).size() == 0);
 }

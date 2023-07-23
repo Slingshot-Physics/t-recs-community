@@ -335,7 +335,8 @@ namespace trecs
          void initializeSystems(void);
 
          // Retrieves an unordered set of entities that match a particular
-         // archetype query.
+         // archetype query. Returns an empty set of entities if an invalid
+         // query is provided.
          auto getQueryEntities(const query_t arch_query) const -> const std::unordered_set<trecs::uid_t> &
          {
             return queries_.getArchetypeEntities(arch_query);
