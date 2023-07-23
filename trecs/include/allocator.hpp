@@ -204,7 +204,7 @@ namespace trecs
          }
 
          template <typename Component_T>
-         bool hasComponent(uid_t entity_uid)
+         bool hasComponent(uid_t entity_uid) const
          {
             if (!entities_.entityActive(entity_uid))
             {
