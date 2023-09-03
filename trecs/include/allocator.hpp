@@ -159,7 +159,6 @@ namespace trecs
          {
             if (!entities_.entityActive(entity_uid))
             {
-               std::cout << "getComponent entity: " << entity_uid << " inactive\n";
                return nullptr;
             }
 
