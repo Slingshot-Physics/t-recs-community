@@ -2,6 +2,8 @@ cmake_minimum_required( VERSION 3.16 )
 
 set( CMAKE_CXX_STANDARD 11 )
 
+# blaarrgghh
+
 project(
     TRECS
     VERSION 0.0.1
